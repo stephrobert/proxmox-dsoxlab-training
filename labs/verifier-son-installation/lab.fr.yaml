@@ -1,0 +1,11 @@
+# Surcharge française du lab verifier-son-installation. Elle ne porte QUE `title` et
+# `description` : tout autre champ y est ignoré en silence, parce que le
+# contrat ne se traduit pas.
+title: "Vérifier votre installation de Proxmox face au cahier des charges"
+description: |
+  Noter une installation de Proxmox VE 9 que vous avez faite vous-même, face au
+  cahier des charges publié : version et distribution de base, processeurs et
+  mémoire, second disque brut dont les labs de stockage ont besoin,
+  virtualisation imbriquée, bridge vmbr0 et dépôt sans abonnement. Le verdict
+  nomme chaque poste en défaut, de sorte que l'installation se corrige puis se
+  fait noter à nouveau.

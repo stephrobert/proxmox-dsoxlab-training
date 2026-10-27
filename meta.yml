@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/meta.schema.json
+#
+# Catalogue proxmox-dsoxlab-training, décrit par le contrat v1 de dsoxlab.
+#
+# Les labs de la formation « Proxmox VE » du blog : un hyperviseur de type 1
+# qu'on installe, configure, sécurise et automatise. La cible est Proxmox VE 9,
+# bâti sur Debian 13 « trixie ».
+#
+# POURQUOI CE CATALOGUE EXISTE. La formation comptait 17 leçons et AUCUN
+# dispositif de validation, ni quiz ni lab, ce qui viole la règle A du socle.
+# Sept signalements d'un lecteur, le 2026-10-23, ont montré ce que cela coûte :
+# une commande publiée qui n'a jamais existé dans aucune version, un playbook
+# qui rend 403 dès le premier appel, un chiffre de dimensionnement périmé.
+# Un guide qui n'est jamais rejoué finit par enseigner ce qui n'existe pas.
+#
+# CE QU'IL FAUT POUR JOUER CES LABS. Proxmox remplace le noyau de la machine et
+# prend la main sur son réseau : il ne s'installe pas sur un poste de travail.
+# Les labs tournent donc en VM, et plusieurs demandent la VIRTUALISATION
+# IMBRIQUÉE, puisque l'objet du cours est précisément de créer des machines.
+#
+# UN LAB ENTRE DANS CETTE LISTE LE JOUR OÙ IL EST ÉCRIT ET JOUÉ, PAS AVANT :
+# `validate-structure` refuse un lab déclaré dont le `lab.yaml` n'existe pas.
+# L'ordre pédagogique est porté par la liste ci-dessous, jamais par les noms de
+# lab : on peut insérer un exercice sans renommer les suivants, et un
+# identifiant se nomme par son GESTE, jamais par son rang.
+#
+# `repo.id` sert de clé pour l'état local de ce catalogue : le changer déplace
+# ces emplacements.
+schema_version: 1
+
+repo:
+  id: proxmox-dsoxlab-training
+  category: proxmox-dsoxlab-training
+  title: "Proxmox VE: install, operate, secure and automate a type 1 hypervisor"
+  blog_url: "https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/"
+  description: |
+    Hands-on labs for the Proxmox VE course: storage backends, networking,
+    role-based access control, VM and LXC lifecycle, backups, and automation
+    with the Ansible collection and Terraform. Target is Proxmox VE 9 on
+    Debian 13.
+
+infra:
+  provider:
+    - kvm
+  network: lab-proxmox
+  cidr: 10.10.113.0/24
+  hosts:
+    # 6 Go et 40 Go : Proxmox installe son noyau, postfix, open-iscsi et
+    # chrony, garde deux noyaux le temps de la bascule, et doit encore loger
+    # les disques des VM que l'apprenant crée.
+    - name: pve.lab
+      distro: debian13
+      role: debian-family
+      ram_mb: 6144
+      vcpu: 4
+      disk_gb: 40
+      # Un second disque, brut, pour les labs de stockage : LVM-thin, ZFS,
+      # ajout et retrait de vdev. Sans lui, impossible d'enseigner un pool.
+      extra_disk_gb: 20
+  providers:
+    kvm:
+      libvirt_uri: "qemu:///system"
+      bridge_name: "virbr-pmxt"
+
+sections:
+  - id: fondamentaux
+    title: Comprendre et installer
+    description: |
+      Ce que Proxmox fait vraiment, son stockage, son réseau et son modèle
+      d'autorisation, avant de créer la première machine.
+    labs:
+      - verifier-son-installation
+
+  - id: instances
+    title: Machines virtuelles et conteneurs
+    description: |
+      Créer, régler et sauvegarder des VM KVM et des conteneurs LXC, et
+      comprendre ce que chaque réglage change réellement.
+    labs: []
+
+  - id: automatisation
+    title: Automatiser Proxmox
+    description: |
+      Piloter l'hyperviseur par son API : jeton et ACL, inventaire dynamique
+      Ansible, modules de la collection community.proxmox, et Terraform.
+    labs: []

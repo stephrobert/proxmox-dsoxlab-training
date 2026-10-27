@@ -1,0 +1,116 @@
+---
+# Joué par `dsoxlab run` avant d'ouvrir la session.
+#
+# CE SETUP N'INSTALLE RIEN, ET C'EST TOUT LE PROPOS DU LAB. La machine arrive
+# en Debian 13 nue ; c'est l'apprenant qui y installe Proxmox. Un setup qui
+# préparerait le terrain lui retirerait l'exercice.
+#
+# Il se contente donc de deux choses : vérifier que la mise en situation est
+# correcte, c'est-à-dire que la machine est bien nue et porte son second
+# disque, et poser le cahier des charges à portée de main.
+- name: Préparer le lab verifier-son-installation
+  hosts: lab_target
+  become: true
+  tasks:
+
+    - name: Relever ce que la machine porte déjà
+      ansible.builtin.command: pveversion
+      register: deja_installe
+      changed_when: false
+      failed_when: false
+
+    - name: Refuser de démarrer si Proxmox est déjà là
+      # Sans ce garde-fou, un lab rejoué sur une machine déjà faite se noterait
+      # 100 sans que l'apprenant ait rien appris.
+      ansible.builtin.fail:
+        msg: >-
+          Proxmox est déjà installé sur cette machine ({{ deja_installe.stdout }}).
+          Ce lab demande une Debian 13 NUE : relancez `dsoxlab clean` puis
+          `dsoxlab run verifier-son-installation` pour repartir d'une machine
+          vierge.
+      when: deja_installe.rc == 0
+
+    - name: Relever les disques, pour vérifier la mise en situation
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          lsblk -dno NAME,TYPE | awk '$2=="disk" {print $1}'
+        executable: /bin/bash
+      register: disques
+      changed_when: false
+
+    - name: Identifier le disque qui porte la racine
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          lsblk -no pkname "$(findmnt -no SOURCE /)" | head -1
+        executable: /bin/bash
+      register: disque_systeme
+      changed_when: false
+
+    - name: Refuser de démarrer sans le second disque
+      # Les labs de stockage qui suivent en ont besoin. Mieux vaut le dire ici
+      # que de laisser l'apprenant le découvrir trois leçons plus loin.
+      ansible.builtin.fail:
+        msg: >-
+          Cette machine n'a qu'un seul disque ({{ disque_systeme.stdout | trim }}).
+          Le cahier des charges en demande deux : un disque système de 40 Go et
+          un second disque brut de 20 Go. Vérifiez `extra_disk_gb` dans le
+          meta.yml du catalogue.
+      when: >-
+        disques.stdout_lines | reject('equalto', disque_systeme.stdout | trim)
+        | list | length == 0
+
+    - name: Créer le répertoire de travail de l'apprenant
+      ansible.builtin.file:
+        path: /opt/lab-proxmox
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Poser le cahier des charges à portée de main
+      ansible.builtin.copy:
+        dest: /opt/lab-proxmox/cahier-des-charges.md
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Ce que votre installation doit atteindre
+
+          Cette machine est une Debian 13 nue. Installez-y Proxmox VE 9, par le
+          dépôt pve-no-subscription, puis faites noter votre travail avec :
+
+              dsoxlab check verifier-son-installation
+
+          Le guide décrit la marche à suivre :
+          https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation/
+
+          ## Les postes notés
+
+          1. Proxmox VE 9 répond à `pveversion`
+          2. la base est bien Debian 13 « trixie »
+          3. les services pve-cluster, pvedaemon et pveproxy sont actifs
+          4. l'interface web écoute sur le port 8006, tenue par pveproxy
+          5. le pont vmbr0 existe et porte l'adresse du serveur
+          6. /dev/kvm est présent, donc la virtualisation imbriquée arrive ici
+          7. la machine a 4 vCPU et 6 Go de RAM
+          8. un second disque d'au moins 20 Go est présent, et RESTE BRUT
+          9. le dépôt pve-no-subscription est configuré et `apt-get update` passe
+
+          ## Deux points qui coûtent cher
+
+          Le second disque doit rester **brut** : ni partition, ni système de
+          fichiers. Les labs de stockage y construiront leur propre pool. Si
+          vous l'intégrez à un volume maintenant, ils n'auront plus de disque.
+
+          L'adresse du serveur doit vivre sur le **pont** vmbr0, pas sur la
+          carte physique. C'est ce pont qui reliera vos machines virtuelles au
+          réseau.
+
+    - name: Dire où trouver la consigne
+      ansible.builtin.debug:
+        msg: >-
+          Machine prête : Debian 13 nue, second disque en place. Le cahier des
+          charges est dans /opt/lab-proxmox/cahier-des-charges.md. À vous
+          d'installer Proxmox VE 9.

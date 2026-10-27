@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+#
+# Le premier lab du catalogue, et il ne fabrique rien : il MESURE l'installation
+# que l'apprenant a faite lui-même.
+#
+# La formation ne livre pas un Proxmox prêt à l'emploi. L'apprenant l'installe
+# sur une machine virtuelle en suivant le cahier des charges publié dans le
+# guide d'installation, et ce lab vérifie la conformité de son travail, poste
+# par poste. On n'apprend pas à installer un hyperviseur en le recevant
+# installé.
+#
+# Un verdict détaillé fait de la conformité un exercice plutôt qu'une barrière :
+# l'apprenant dont l'installation ne passe pas sait exactement quoi corriger,
+# et peut recommencer. Les tests nomment donc le poste en défaut, jamais un
+# simple « échec ».
+id: verifier-son-installation
+title: "Check your Proxmox VE installation against the specification"
+level: l1
+description: |
+  Grade a Proxmox VE 9 installation the learner performed themselves against
+  the published specification: version and base distribution, CPU and memory,
+  the raw second disk the storage labs need, nested virtualization, the vmbr0
+  bridge, and the no-subscription repository. The verdict names each failing
+  item so the installation can be fixed and graded again.
+skills:
+  - proxmox
+  - installation
+  - nested-virtualization
+  - storage
+distros:
+  - debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation/
+lab_type: lab
+difficulty: beginner
+estimated_time: 30m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Proxmox VE 9, installed by the learner on Debian 13"
+      label_fr: "Proxmox VE 9, installé par l'apprenant sur Debian 13"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false
