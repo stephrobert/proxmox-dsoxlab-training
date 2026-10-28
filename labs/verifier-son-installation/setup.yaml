@@ -30,6 +30,50 @@
           vierge.
       when: deja_installe.rc == 0
 
+    # Les quatre controles qui suivent portent sur des PREREQUIS, que le
+    # provisionnement garantit : ils ne sont donc pas notes. Les noter rendrait
+    # 40/100 a l apprenant avant qu il ait rien fait, et casserait
+    # l attestation du catalogue, qui exige un 0 avant la solution.
+    # Mesure du 2026-10-27.
+
+    - name: Vérifier que la base est bien Debian 13
+      ansible.builtin.shell:
+        cmd: . /etc/os-release && echo "$VERSION_CODENAME"
+        executable: /bin/bash
+      register: nom_de_code
+      changed_when: false
+
+    - name: Refuser de démarrer sur une autre base que trixie
+      ansible.builtin.fail:
+        msg: >-
+          Le système de base est Debian « {{ nom_de_code.stdout | trim }} », et
+          non « trixie ». Proxmox VE 9 repose sur Debian 13 : vérifiez la
+          `distro` déclarée dans le meta.yml du catalogue.
+      when: nom_de_code.stdout | trim != 'trixie'
+
+    - name: Vérifier que la virtualisation imbriquée arrive jusqu'ici
+      ansible.builtin.stat:
+        path: /dev/kvm
+      register: kvm
+
+    - name: Refuser de démarrer sans /dev/kvm
+      ansible.builtin.fail:
+        msg: >-
+          /dev/kvm est absent : ce Proxmox ne pourrait démarrer aucune machine
+          virtuelle. La virtualisation imbriquée n'est pas active sur
+          l'hyperviseur hôte. Vérifiez
+          `cat /sys/module/kvm_intel/parameters/nested` sur l'hôte, qui doit
+          rendre Y.
+      when: not kvm.stat.exists
+
+    - name: Refuser de démarrer sur une machine sous-dimensionnée
+      ansible.builtin.fail:
+        msg: >-
+          Cette machine a {{ ansible_processor_vcpus }} vCPU et
+          {{ ansible_memtotal_mb }} Mo de RAM. Le cahier des charges demande
+          4 vCPU et 6 Go : vérifiez `vcpu` et `ram_mb` dans le meta.yml.
+      when: ansible_processor_vcpus < 4 or ansible_memtotal_mb < 5800
+
     - name: Relever les disques, pour vérifier la mise en situation
       ansible.builtin.shell:
         cmd: |
@@ -60,6 +104,32 @@
       when: >-
         disques.stdout_lines | reject('equalto', disque_systeme.stdout | trim)
         | list | length == 0
+
+    - name: Vérifier que le second disque est bien BRUT
+      # « Brut » veut dire : aucune partition, aucune signature de systeme de
+      # fichiers. Les labs de stockage y construiront leur propre pool.
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          for d in $(lsblk -dno NAME,TYPE | awk '$2=="disk" {print $1}'); do
+            [ "$d" = "{{ disque_systeme.stdout | trim }}" ] && continue
+            if [ -z "$(lsblk -no NAME "$d" | tail -n +2)" ] \
+               && [ -z "$(lsblk -no FSTYPE "/dev/$d")" ]; then
+              echo "$d"
+            fi
+          done
+        executable: /bin/bash
+      register: disques_bruts
+      changed_when: false
+
+    - name: Refuser de démarrer si le second disque est déjà utilisé
+      ansible.builtin.fail:
+        msg: >-
+          Aucun second disque brut : celui de cette machine porte déjà des
+          partitions ou une signature de système de fichiers. Les labs de
+          stockage y construiront leur propre pool, il doit donc rester vierge.
+          Reprovisionnez la machine.
+      when: disques_bruts.stdout_lines | length == 0
 
     - name: Créer le répertoire de travail de l'apprenant
       ansible.builtin.file:

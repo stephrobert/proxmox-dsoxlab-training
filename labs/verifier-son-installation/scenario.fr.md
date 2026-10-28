@@ -10,29 +10,41 @@ celui du guide, vous avez réussi.
 
 ## Ce qui est noté
 
-Neuf postes, repris du cahier des charges publié dans le guide d'installation.
-Vous les retrouvez sur la machine, dans
-`/opt/lab-proxmox/cahier-des-charges.md`.
+**Six postes**, et ce sont ceux que vous accomplissez. Le cahier des charges
+complet est sur la machine, dans `/opt/lab-proxmox/cahier-des-charges.md`.
 
 | # | Poste | Comment il est vérifié |
 |---|-------|------------------------|
-| 1 | Proxmox VE 9 est installé | `pveversion` répond, et annonce une version 9 |
-| 2 | La base est Debian 13 | le nom de code est `trixie` |
+| 1 | Proxmox VE est installé | `pveversion` répond |
+| 2 | C'est bien une version 9 | le numéro majeur est 9 ou plus |
 | 3 | Les services tournent | `pve-cluster`, `pvedaemon` et `pveproxy` sont actifs |
 | 4 | L'interface web écoute | le port 8006 est tenu par `pveproxy` |
 | 5 | Le pont existe | `vmbr0` est présent et porte l'adresse du serveur |
-| 6 | La virtualisation imbriquée arrive | `/dev/kvm` existe, le processeur expose `vmx` ou `svm` |
-| 7 | Le dimensionnement est respecté | 4 vCPU et 6 Go de mémoire |
-| 8 | Le second disque est là, **et brut** | un disque d'au moins 20 Go, sans partition ni système de fichiers |
-| 9 | Les mises à jour sont possibles | le dépôt `pve-no-subscription` est configuré, `apt-get update` passe |
+| 6 | Les mises à jour sont possibles | le dépôt `pve-no-subscription` est configuré, `apt-get update` passe |
+
+## Ce qui est garanti, et n'est donc pas noté
+
+Quatre autres postes du cahier des charges sont assurés par la machine qu'on
+vous remet : la base **Debian 13**, la **virtualisation imbriquée** avec son
+`/dev/kvm`, le **dimensionnement** à 4 vCPU et 6 Go, et la présence d'un
+**second disque brut** de 20 Go.
+
+Ce sont des prérequis, pas des acquis : les noter reviendrait à vous créditer
+d'un travail que vous n'avez pas fait. Le lab les vérifie quand même, mais au
+démarrage, et il refuse de s'ouvrir si l'un manque, avec le message qui dit
+lequel.
+
+Ces quatre postes comptent en revanche pleinement quand vous installez Proxmox
+sur **votre propre machine**, hors de ce lab : c'est là que le cahier des
+charges complet prend son sens.
 
 ## Deux pièges qui coûtent cher
 
 **Le second disque doit rester brut.** Il est tentant de l'intégrer tout de
 suite à un volume ou à un pool. Ne le faites pas : les labs de stockage qui
 suivent y construiront leur propre pool ZFS ou LVM-thin, et ils ont besoin
-d'un disque vierge. Le test refuse un disque qui porte déjà une partition ou
-une signature de système de fichiers.
+d'un disque vierge. Rien ne vous en empêchera ici, et c'est justement pour cela
+qu'il faut le savoir : la conséquence se paiera deux leçons plus loin.
 
 **L'adresse doit vivre sur le pont, pas sur la carte réseau.** Un Proxmox
 installé par-dessus Debian garde, tant qu'on ne fait rien, son adresse sur la

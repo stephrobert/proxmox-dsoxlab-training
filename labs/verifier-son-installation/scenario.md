@@ -10,28 +10,37 @@ succeeded.
 
 ## What is graded
 
-Nine items, taken from the specification published in the installation guide.
-You will find them on the machine, in
-`/opt/lab-proxmox/cahier-des-charges.md`.
+**Six items**, and they are the ones you carry out. The full specification sits
+on the machine, in `/opt/lab-proxmox/cahier-des-charges.md`.
 
 | # | Item | How it is checked |
 |---|------|-------------------|
-| 1 | Proxmox VE 9 is installed | `pveversion` answers, and reports a version 9 |
-| 2 | The base is Debian 13 | the codename is `trixie` |
+| 1 | Proxmox VE is installed | `pveversion` answers |
+| 2 | It really is a version 9 | the major number is 9 or above |
 | 3 | Services are running | `pve-cluster`, `pvedaemon` and `pveproxy` are active |
 | 4 | The web interface listens | port 8006 is held by `pveproxy` |
 | 5 | The bridge exists | `vmbr0` is present and carries the server address |
-| 6 | Nested virtualization reaches it | `/dev/kvm` exists, the CPU exposes `vmx` or `svm` |
-| 7 | Sizing is respected | 4 vCPUs and 6 GB of memory |
-| 8 | The second disk is there, **and raw** | a disk of at least 20 GB, with no partition and no filesystem |
-| 9 | Updates are possible | the `pve-no-subscription` repository is configured, `apt-get update` succeeds |
+| 6 | Updates are possible | the `pve-no-subscription` repository is configured, `apt-get update` succeeds |
+
+## What is guaranteed, and therefore not graded
+
+Four other items of the specification are provided by the machine you are
+handed: the **Debian 13** base, **nested virtualization** with its `/dev/kvm`,
+the **sizing** of 4 vCPUs and 6 GB, and a **raw second disk** of 20 GB.
+
+Those are prerequisites, not achievements: grading them would credit you with
+work you did not do. The lab still checks them, at startup, and refuses to open
+if one is missing, naming which one.
+
+They do count in full when you install Proxmox on **your own machine**, outside
+this lab: that is where the whole specification earns its keep.
 
 ## Two costly traps
 
 **The second disk must stay raw.** It is tempting to fold it into a volume or a
 pool right away. Do not: the storage labs that follow will build their own ZFS
-or LVM-thin pool on it, and they need a pristine disk. The test rejects a disk
-that already carries a partition or a filesystem signature.
+or LVM-thin pool on it, and they need a pristine disk. Nothing stops you here,
+and that is precisely why you should know: the bill comes two lessons later.
 
 **The address must live on the bridge, not on the network card.** A Proxmox
 installed on top of Debian keeps its address on the physical card until you do
