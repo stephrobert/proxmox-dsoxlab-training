@@ -17,6 +17,17 @@ by learners.
 - **The first lab, `verifier-son-installation`**: it grades, item by item, a
   Proxmox VE 9 installation the learner performed themselves on a bare
   Debian 13, with four bilingual hints of growing cost and a challenge README.
+- **Five level 1 labs**, each attested 0 → 100 on a fresh machine:
+  `pve-raccorder-instance` (plug a VM back into the right bridge without
+  recreating it), `pve-suivre-tache` (tie each result to its task by UPID),
+  `pve-creer-vm` (hardware contract, boot from disk, a service that comes
+  back after a reboot), `pve-creer-lxc` (unprivileged container, limits
+  read from the cgroups) and `pve-reparer-agent` (guest agent restored with
+  no forced stop, fault drawn from two cases).
+- `shared/noeud-proxmox.yml`, a guard that only replays the attested
+  Proxmox installation when the node is not ready, and
+  `shared/image-debian-cloud.yml`, the Debian 13 cloud image verified by
+  its checksum.
 - **The tooling of the sibling catalogs**: `scripts/valider-labs.py` and
   `validation-labs.json`, which attest a lab both ways (0 before the work, 100
   after the solution); `gen_catalog.py`, `check-playbooks.py`,

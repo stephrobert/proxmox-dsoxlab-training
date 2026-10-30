@@ -18,6 +18,17 @@ labs, ce qui casse la progression déjà enregistrée des apprenants.
   une installation de Proxmox VE 9 que l'apprenant a faite lui-même sur une
   Debian 13 nue, avec quatre indices bilingues à coût croissant et un README
   de challenge.
+- **Cinq labs du niveau 1**, chacun attesté 0 → 100 sur machine neuve :
+  `pve-raccorder-instance` (rebrancher une VM sur le bon pont sans la
+  recréer), `pve-suivre-tache` (rattacher chaque résultat à sa tâche par
+  l'UPID), `pve-creer-vm` (contrat matériel, démarrage sur disque, service
+  qui revient après un redémarrage), `pve-creer-lxc` (conteneur non
+  privilégié, limites lues dans les cgroups) et `pve-reparer-agent` (agent
+  invité rétabli sans arrêt forcé, panne tirée parmi deux cas).
+- `shared/noeud-proxmox.yml`, une garde qui ne rejoue l'installation
+  attestée de Proxmox que si le nœud n'est pas prêt, et
+  `shared/image-debian-cloud.yml`, l'image cloud Debian 13 vérifiée par sa
+  somme.
 - **L'outillage des catalogues frères** : `scripts/valider-labs.py` et
   `validation-labs.json`, qui attestent un lab dans les deux sens (0 avant le
   travail, 100 après la solution) ; `gen_catalog.py`, `check-playbooks.py`,
