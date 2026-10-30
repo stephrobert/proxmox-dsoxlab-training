@@ -1,5 +1,5 @@
 {
-  "genere_le": "2026-10-30 20:21:34",
+  "genere_le": "2026-10-30 20:58:07",
   "act": "act version 0.2.84",
   "dsoxlab": "dsoxlab 0.5.5",
   "labs": {
@@ -10,7 +10,19 @@
       "score_avant": 0,
       "score_apres": 100,
       "tests": "4/4",
-      "duree_s": 599.4,
+      "duree_s": 706.7,
+      "traces": [],
+      "pourquoi": "",
+      "date": "2026-10-30"
+    },
+    "pve-raccorder-instance": {
+      "id": "pve-raccorder-instance",
+      "chemin": "pve-raccorder-instance",
+      "verdict": "VALIDE",
+      "score_avant": 0,
+      "score_apres": 100,
+      "tests": "4/4",
+      "duree_s": 501.0,
       "traces": [],
       "pourquoi": "",
       "date": "2026-10-30"
