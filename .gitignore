@@ -19,7 +19,14 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .venv/
-
-# Mot de passe du vault qui chiffre les solutions. Local, jamais commite :
-# sans lui les solutions sont illisibles, avec lui dans git elles sont en clair.
 .vault-pass
+
+# Reglages d'editeur : ils appartiennent a la machine, pas au catalogue. Sans
+# cette ligne, `git status` les affiche a chaque session et on finit par ne
+# plus lire la liste.
+.vscode/
+
+# La version LISIBLE des corriges, d'ou `scripts/chiffrer-solutions.sh` tire
+# le chiffre. Elle ne doit jamais partir : c'est la solution en clair d'un
+# depot public.
+solution-en-clair/

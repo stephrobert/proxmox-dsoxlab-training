@@ -1,4 +1,4 @@
-# Publier une version de proxmox
+# Publier une version de proxmox-dsoxlab-training
 
 **Langue :** [English](./RELEASING.md) · [Français](./RELEASING.fr.md)
 
@@ -9,7 +9,7 @@ PyPI, pas de wheel, aucun registre d'artefacts externe.
 ## Ce que contient une version
 
 Le workflow `release.yml` construit
-`proxmox-<version>.tar.gz` avec :
+`proxmox-dsoxlab-training-<version>.tar.gz` avec :
 
 - `labs/`, `meta.yml`, `meta.fr.yml`, `curriculums.yml`, `conftest.py`,
   `pyproject.toml`, `uv.lock` et `mise.toml`,
@@ -94,8 +94,8 @@ ligne du dépôt sur laquelle se priver du regard des analyseurs.
    côté de ce dépôt), lancer :
 
    ```bash
-   python3 scripts/reattester-labs.py --depot proxmox           # plan et garde-fous
-   python3 scripts/reattester-labs.py --depot proxmox --apply   # rejoue et commite
+   python3 scripts/reattester-labs.py --depot proxmox-dsoxlab-training           # plan et garde-fous
+   python3 scripts/reattester-labs.py --depot proxmox-dsoxlab-training --apply   # rejoue et commite
    ```
 
    Le script rejoue chaque lab « à réattester » par `scripts/valider-labs.py`,
@@ -125,16 +125,16 @@ ligne du dépôt sur laquelle se priver du regard des analyseurs.
 Intégrité et contenu :
 
 ```bash
-sha256sum -c proxmox-<version>.tar.gz.sha256
-tar tzf proxmox-<version>.tar.gz | head
+sha256sum -c proxmox-dsoxlab-training-<version>.tar.gz.sha256
+tar tzf proxmox-dsoxlab-training-<version>.tar.gz | head
 ```
 
 Provenance du build. Prouve que l'archive a bien été produite par le workflow de
 ce dépôt, et non reconstruite par quelqu'un d'autre :
 
 ```bash
-gh attestation verify proxmox-<version>.tar.gz \
-  --repo stephrobert/proxmox
+gh attestation verify proxmox-dsoxlab-training-<version>.tar.gz \
+  --repo stephrobert/proxmox-dsoxlab-training
 ```
 
 **La vérification qui atteste le niveau 3** nomme le workflow signataire. Elle
@@ -143,9 +143,9 @@ d'attestation isolé, et c'est elle qu'il faut lancer à la première release po
 confirmer que la chaîne tient :
 
 ```bash
-gh attestation verify proxmox-<version>.tar.gz \
-  --repo stephrobert/proxmox \
-  --signer-workflow stephrobert/proxmox/.github/workflows/attester.yml
+gh attestation verify proxmox-dsoxlab-training-<version>.tar.gz \
+  --repo stephrobert/proxmox-dsoxlab-training \
+  --signer-workflow stephrobert/proxmox-dsoxlab-training/.github/workflows/attester.yml
 ```
 
 Signature Cosign keyless. Les **deux** options de certificat sont obligatoires :
@@ -154,10 +154,10 @@ la vérification de son sens.
 
 ```bash
 cosign verify-blob \
-  --bundle proxmox-<version>.tar.gz.cosign.bundle \
-  --certificate-identity-regexp "https://github.com/stephrobert/proxmox/.github/workflows/release.yml@.*" \
+  --bundle proxmox-dsoxlab-training-<version>.tar.gz.cosign.bundle \
+  --certificate-identity-regexp "https://github.com/stephrobert/proxmox-dsoxlab-training/.github/workflows/release.yml@.*" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  proxmox-<version>.tar.gz
+  proxmox-dsoxlab-training-<version>.tar.gz
 ```
 
 > **Piège de version Cosign.** La CI installe **Cosign 3.x**, qui écrit un
@@ -195,7 +195,7 @@ Le passage par pull request, la résolution des fils et la CI verte restent
 obligatoires.
 
 ```bash
-gh api --method POST repos/stephrobert/proxmox/rulesets \
+gh api --method POST repos/stephrobert/proxmox-dsoxlab-training/rulesets \
   --input - <<'JSON'
 {
   "name": "Protection de main",

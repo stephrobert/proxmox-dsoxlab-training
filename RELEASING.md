@@ -1,4 +1,4 @@
-# Releasing proxmox
+# Releasing proxmox-dsoxlab-training
 
 **Language:** [English](./RELEASING.md) · [Français](./RELEASING.fr.md)
 
@@ -9,7 +9,7 @@ Release: no PyPI, no wheel, no external artifact registry.
 ## What a release contains
 
 The `release.yml` workflow builds
-`proxmox-<version>.tar.gz` with:
+`proxmox-dsoxlab-training-<version>.tar.gz` with:
 
 - `labs/`, `meta.yml`, `meta.fr.yml`, `curriculums.yml`, `conftest.py`,
   `pyproject.toml`, `uv.lock` and `mise.toml`,
@@ -92,8 +92,8 @@ the analysers' scrutiny.
    the site repository (`test-astro-5`, cloned next to this one), run:
 
    ```bash
-   python3 scripts/reattester-labs.py --depot proxmox           # plan and safeguards
-   python3 scripts/reattester-labs.py --depot proxmox --apply   # replay and commit
+   python3 scripts/reattester-labs.py --depot proxmox-dsoxlab-training           # plan and safeguards
+   python3 scripts/reattester-labs.py --depot proxmox-dsoxlab-training --apply   # replay and commit
    ```
 
    The script replays each lab marked "to re-attest" through
@@ -124,16 +124,16 @@ the analysers' scrutiny.
 Integrity and contents:
 
 ```bash
-sha256sum -c proxmox-<version>.tar.gz.sha256
-tar tzf proxmox-<version>.tar.gz | head
+sha256sum -c proxmox-dsoxlab-training-<version>.tar.gz.sha256
+tar tzf proxmox-dsoxlab-training-<version>.tar.gz | head
 ```
 
 Build provenance. Proves the archive really was produced by this repository's
 workflow, and not rebuilt by someone else:
 
 ```bash
-gh attestation verify proxmox-<version>.tar.gz \
-  --repo stephrobert/proxmox
+gh attestation verify proxmox-dsoxlab-training-<version>.tar.gz \
+  --repo stephrobert/proxmox-dsoxlab-training
 ```
 
 **The check that establishes Build Level 3** names the signing workflow. It
@@ -142,9 +142,9 @@ workflow, and it is the one to run on the first release to confirm the chain
 holds:
 
 ```bash
-gh attestation verify proxmox-<version>.tar.gz \
-  --repo stephrobert/proxmox \
-  --signer-workflow stephrobert/proxmox/.github/workflows/attester.yml
+gh attestation verify proxmox-dsoxlab-training-<version>.tar.gz \
+  --repo stephrobert/proxmox-dsoxlab-training \
+  --signer-workflow stephrobert/proxmox-dsoxlab-training/.github/workflows/attester.yml
 ```
 
 Keyless Cosign signature. **Both** certificate flags are mandatory: without
@@ -153,10 +153,10 @@ of its meaning.
 
 ```bash
 cosign verify-blob \
-  --bundle proxmox-<version>.tar.gz.cosign.bundle \
-  --certificate-identity-regexp "https://github.com/stephrobert/proxmox/.github/workflows/release.yml@.*" \
+  --bundle proxmox-dsoxlab-training-<version>.tar.gz.cosign.bundle \
+  --certificate-identity-regexp "https://github.com/stephrobert/proxmox-dsoxlab-training/.github/workflows/release.yml@.*" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  proxmox-<version>.tar.gz
+  proxmox-dsoxlab-training-<version>.tar.gz
 ```
 
 > **Cosign version trap.** The CI installs **Cosign 3.x**, which writes a new
@@ -193,7 +193,7 @@ has a single maintainer, who cannot approve their own pull request. Going
 through a pull request, resolving threads and a green CI stay mandatory.
 
 ```bash
-gh api --method POST repos/stephrobert/proxmox/rulesets \
+gh api --method POST repos/stephrobert/proxmox-dsoxlab-training/rulesets \
   --input - <<'JSON'
 {
   "name": "Protection de main",

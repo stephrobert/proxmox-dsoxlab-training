@@ -7,11 +7,29 @@
 # titres de sections tels qu'ils sont écrits dans `meta.yml`.
 
 repo:
-  title: proxmox
+  title: "Formation Proxmox VE : installer, exploiter, sécuriser et automatiser un hyperviseur de type 1"
   description: |
-    À remplir : ce que ce catalogue apprend, et à qui.
+    Les labs de la formation « Proxmox VE ». L'apprenant installe lui-même
+    Proxmox VE 9 sur Debian 13, selon un cahier des charges, puis crée,
+    sauvegarde et restaure ses machines, avant d'exploiter un cluster et
+    d'automatiser la plateforme par son API.
+
+    Chaque lab est noté sur l'état du système, jamais sur les commandes
+    tapées : les tests interrogent le nœud, ses invités et ses services.
 
 sections:
-  - id: premiers-pas
-    title: Premiers pas
-    description: À remplir.
+  - id: deployer
+    title: "Déployer un nœud et ses premières instances"
+    description: "Installer Proxmox VE, depuis l'ISO ou sur une Debian 13, et le vérifier face à un cahier des charges ; créer une VM KVM et un conteneur LXC non privilégié, construire un modèle, restaurer une première instance."
+  - id: exploiter
+    title: "Sécuriser et exploiter une plateforme"
+    description: "Déléguer les droits sans élargir le périmètre, filtrer les flux, segmenter le réseau, sauvegarder sur Proxmox Backup Server et prouver la restauration, surveiller la capacité, diagnostiquer une instance et maintenir un nœud."
+  - id: cluster
+    title: "Exploiter un cluster et sa disponibilité"
+    description: "Construire un cluster de trois nœuds, migrer et répliquer les invités, éprouver la haute disponibilité face à une panne imposée de l'extérieur, et reprendre après la perte du site primaire."
+  - id: automatiser
+    title: "Automatiser une plateforme reproductible"
+    description: "Piloter l'API et attendre les résultats réels, provisionner avec Terraform sous des droits mesurés, construire un inventaire Ansible fiable, et livrer une plateforme qu'un contrôleur vierge sait reconstruire."
+  - id: options
+    title: "Options"
+    description: "Windows avec VirtIO, migration VMware, Ceph, SDN et passthrough PCI. Chaque option est indépendante, et aucune ne bloque un niveau."

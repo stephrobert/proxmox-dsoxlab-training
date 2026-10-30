@@ -1,0 +1,25 @@
+# Configuration CodeQL du catalogue Proxmox VE.
+#
+# POURQUOI CE FICHIER EXISTE
+#
+# Le `ci.yml` de ce depot le REFERENCE. Sans lui, les deux jobs CodeQL
+# echouent sur « The configuration file .github/codeql/config.yml does not
+# exist », et le chemin est le piege : il vit sous `.github/codeql/` et non
+# `.github/codeql-config.yml`.
+#
+# CE QU'IL EXCLUT, MESURE SUR CE DEPOT
+
+# Les corriges de reference, et eux seuls : ils sont chiffres par
+# ansible-vault, et CodeQL ne peut pas les lire.
+#
+# CE QUI RESTE ANALYSE
+#
+#   .github/workflows/        les workflows du catalogue lui-meme
+#   scripts/                  l'outillage de validation
+#   tests/                    les garde-fous du depot
+#   labs/**/challenge/tests/  les tests joues sur le poste de l'apprenant
+name: "Catalogue Proxmox VE, hors solutions chiffrees"
+
+paths-ignore:
+  # Corriges chiffres par ansible-vault.
+  - "solution/**"

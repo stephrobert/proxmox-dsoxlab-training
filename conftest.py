@@ -1,8 +1,8 @@
 """Configuration pytest globale du catalogue proxmox-dsoxlab-training.
 
-Repris du catalogue publier-service, lui-meme repris du catalogue Linux : le
-code y est generique, et seuls les exemples des docstrings changent d un
-catalogue a l autre. Il construit le chemin d une solution comme
+Repris du catalogue Linux, dont il est la copie fidele : le code y est
+generique, et seuls les exemples des docstrings ont ete transposes. Il
+construit le chemin d une solution comme
 `solution/<chemin du lab depuis labs/>/solution.yaml`, ce qui donne
 `solution/<lab>/solution.yaml` avec la structure plate de ce catalogue.
 

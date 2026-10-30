@@ -40,8 +40,7 @@ repo:
     Debian 13.
 
 infra:
-  provider:
-    - kvm
+  provider: kvm
   network: lab-proxmox
   cidr: 10.10.113.0/24
   hosts:
@@ -63,24 +62,46 @@ infra:
       bridge_name: "virbr-pmxt"
 
 sections:
-  - id: fondamentaux
-    title: Comprendre et installer
+  # One section per level of the course (src/data/parcours/proxmox.yaml,
+  # projet.programme_cible.niveaux), then the options. A lab enters its list
+  # the day it is written and proved both ways, not before.
+  - id: deployer
+    title: "Deploy a node and its first instances"
     description: |
-      Ce que Proxmox fait vraiment, son stockage, son réseau et son modèle
-      d'autorisation, avant de créer la première machine.
+      Install Proxmox VE, from the ISO or on top of Debian 13, and check it
+      against a written specification; then create a KVM VM and an
+      unprivileged LXC container, build a template, and restore a first
+      instance.
     labs:
       - verifier-son-installation
 
-  - id: instances
-    title: Machines virtuelles et conteneurs
+  - id: exploiter
+    title: "Secure and operate a platform"
     description: |
-      Créer, régler et sauvegarder des VM KVM et des conteneurs LXC, et
-      comprendre ce que chaque réglage change réellement.
+      Delegate access without widening it, filter flows, segment the network,
+      back up to Proxmox Backup Server and prove the restore, watch capacity,
+      diagnose an instance and maintain a node.
     labs: []
 
-  - id: automatisation
-    title: Automatiser Proxmox
+  - id: cluster
+    title: "Run a cluster and keep it available"
     description: |
-      Piloter l'hyperviseur par son API : jeton et ACL, inventaire dynamique
-      Ansible, modules de la collection community.proxmox, et Terraform.
+      Build a three-node cluster, migrate and replicate guests, test high
+      availability against a failure imposed from outside, and recover after
+      losing the primary site.
+    labs: []
+
+  - id: automatiser
+    title: "Automate a reproducible platform"
+    description: |
+      Drive the API and wait for real results, provision with Terraform under
+      measured rights, build a reliable Ansible inventory, and deliver a
+      platform that a clean controller can rebuild.
+    labs: []
+
+  - id: options
+    title: "Options"
+    description: |
+      Windows with VirtIO, VMware migration, Ceph, SDN and PCI passthrough.
+      Each option is independent, and none of them blocks a level.
     labs: []
