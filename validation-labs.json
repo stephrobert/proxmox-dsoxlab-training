@@ -1,0 +1,19 @@
+{
+  "genere_le": "2026-10-30 19:20:54",
+  "act": "act version 0.2.84",
+  "dsoxlab": "dsoxlab 0.5.5",
+  "labs": {
+    "verifier-son-installation": {
+      "id": "verifier-son-installation",
+      "chemin": "verifier-son-installation",
+      "verdict": "VALIDE",
+      "score_avant": 0,
+      "score_apres": 100,
+      "tests": "6/6",
+      "duree_s": 389.9,
+      "traces": [],
+      "pourquoi": "",
+      "date": "2026-10-30"
+    }
+  }
+}
