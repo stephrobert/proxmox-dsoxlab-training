@@ -32,11 +32,15 @@
       delay: 10
       until: index_modeles.rc == 0
 
-    - name: Lire le nom du modèle Debian 13 standard publié
+    # L'index liste AUSSI les modèles arm64, et le tri alphabétique les place
+    # après amd64. Mesuré le 2026-10-30 : le CT se créait, puis /sbin/init
+    # échouait sur « Exec format error ». On ne retient que l'architecture
+    # du nœud.
+    - name: Lire le nom du modèle Debian 13 standard publié pour amd64
       ansible.builtin.shell:
         cmd: |
           set -o pipefail
-          pveam available --section system | awk '$2 ~ /^debian-13-standard_/ {print $2}' | sort -V | tail -1
+          pveam available --section system | awk '$2 ~ /^debian-13-standard_.*_amd64\.tar/ {print $2}' | sort -V | tail -1
         executable: /bin/bash
       register: modele
       changed_when: false
