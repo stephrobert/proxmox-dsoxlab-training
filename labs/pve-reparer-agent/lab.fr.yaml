@@ -1,0 +1,10 @@
+# Surcharge française du lab pve-reparer-agent. Elle ne porte QUE `title` et
+# `description` : tout autre champ y est ignoré en silence, parce que le
+# contrat ne se traduit pas.
+title: "Rétablir l'agent invité QEMU sans forcer l'arrêt de la VM"
+description: |
+  L'agent invité QEMU de la VM 180 ne répond pas, pour l'une de deux causes
+  tirées au hasard : le périphérique n'est pas activé dans Proxmox, ou le
+  paquet manque dans l'invité. Trouver laquelle, la corriger, redémarrer la VM
+  proprement plutôt que de la couper, et prouver depuis le nœud que l'agent
+  répond et remonte la bonne adresse, pendant que la charge garde ses données.

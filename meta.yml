@@ -77,6 +77,7 @@ sections:
       - pve-raccorder-instance
       - pve-creer-vm
       - pve-creer-lxc
+      - pve-reparer-agent
 
   - id: exploiter
     title: "Secure and operate a platform"

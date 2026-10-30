@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+#
+# Rétablir l'agent invité QEMU d'une VM, sans forcer son arrêt.
+#
+# Contrat : TP `pve-reparer-agent` du parcours Proxmox du site, profil `mono`.
+# Le setup tire une panne parmi deux cas bornés ; les tests notent l'agent,
+# l'adresse qu'il remonte et l'absence d'arrêt forcé, depuis le nœud.
+id: pve-reparer-agent
+title: "Restore the QEMU guest agent without forcing the VM off"
+level: l1
+description: |
+  The QEMU guest agent of VM 180 does not answer, for one of two causes drawn
+  at random: the device is not enabled in Proxmox, or the package is missing in
+  the guest. Find which one, fix it, restart the VM cleanly rather than forcing
+  it off, and prove from the node that the agent answers and reports the right
+  address while the workload keeps its data.
+skills:
+  - proxmox
+  - qemu-guest-agent
+  - virtual-machines
+  - troubleshooting
+distros:
+  - debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/qemu-guest-agent/
+lab_type: lab
+difficulty: beginner
+estimated_time: 25m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Proxmox VE 9 node, with a VM whose guest agent is down"
+      label_fr: "Nœud Proxmox VE 9, avec une VM dont l'agent invité est en panne"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: true

@@ -1,0 +1,177 @@
+---
+# Joué par `dsoxlab run` : il pose une VM dont l'agent invité ne répond pas.
+#
+# L'état initial du contrat (profil `mono`) : une VM existante, une panne
+# d'agent TIRÉE parmi des cas bornés, un accès console et client, et des
+# données témoin. Deux cas, tirés une seule fois par session :
+#
+#   peripherique   l'agent est installé dans l'invité, mais le périphérique
+#                  de l'agent n'est pas activé dans la configuration Proxmox ;
+#   paquet         le périphérique est activé, mais qemu-guest-agent est
+#                  absent de l'invité.
+#
+# Dans les deux cas, `qm agent 180 ping` échoue, et le service web répond.
+- name: Préparer le lab pve-reparer-agent
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-reparer-agent
+    vmid: 180
+    adresse_vm: 10.10.113.180
+    passerelle_lab: 10.10.113.1
+
+  tasks:
+    - name: Disposer d'un nœud Proxmox VE prêt
+      ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+
+    - name: Disposer de l'image cloud Debian 13
+      ansible.builtin.include_tasks: ../../shared/image-debian-cloud.yml
+
+    - name: Ouvrir le stockage local aux disques et aux extraits
+      ansible.builtin.command: >-
+        pvesm set local --content iso,vztmpl,backup,images,rootdir,snippets
+      changed_when: true
+
+    - name: Créer le répertoire du lab
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    # L'accès « client » à l'invité : la clé SSH de root sur le nœud.
+    - name: Disposer d'une clé SSH pour root sur le nœud
+      ansible.builtin.command: ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519
+      args:
+        creates: /root/.ssh/id_ed25519
+
+    - name: Oublier une ancienne clé d'hôte à l'adresse de la VM
+      ansible.builtin.command: ssh-keygen -R {{ adresse_vm }}
+      changed_when: true
+      failed_when: false
+
+    - name: Tirer le nonce et le cas de panne, une fois par session
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          od -An -N8 -tx1 /dev/urandom | tr -d ' \n' > nonce
+          if [ $(( $(od -An -N1 -tu1 /dev/urandom) % 2 )) -eq 0 ]; then
+            echo peripherique > cas
+          else
+            echo paquet > cas
+          fi
+          chmod 0600 cas
+          date +%s > debut
+        chdir: "{{ lab_dir }}"
+        executable: /bin/bash
+        creates: "{{ lab_dir }}/nonce"
+
+    - name: Lire le nonce et le cas
+      ansible.builtin.slurp:
+        src: "{{ lab_dir }}/{{ item }}"
+      register: tirage
+      loop:
+        - nonce
+        - cas
+
+    - name: Retenir le nonce et le cas
+      ansible.builtin.set_fact:
+        nonce_lab: "{{ tirage.results[0].content | b64decode | trim }}"
+        cas_lab: "{{ tirage.results[1].content | b64decode | trim }}"
+
+    - name: Écrire la configuration cloud-init de la VM
+      ansible.builtin.copy:
+        dest: /var/lib/vz/snippets/pve-reparer-agent.yaml
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          #cloud-config
+          hostname: vm-agent
+          {% if cas_lab == 'peripherique' %}
+          packages:
+            - qemu-guest-agent
+          {% endif %}
+          write_files:
+            - path: /srv/temoin/index.html
+              permissions: "0644"
+              content: |
+                temoin {{ nonce_lab }} vmid {{ vmid }}
+            - path: /etc/systemd/system/temoin.service
+              permissions: "0644"
+              content: |
+                [Unit]
+                Description=Service témoin du lab
+                After=network-online.target
+
+                [Service]
+                ExecStart=/usr/bin/python3 -m http.server 8080 --directory /srv/temoin
+
+                [Install]
+                WantedBy=multi-user.target
+          runcmd:
+            - systemctl daemon-reload
+            - systemctl enable --now temoin.service
+
+    - name: Mesurer si la VM existe déjà
+      ansible.builtin.command: qm status {{ vmid }}
+      register: existe
+      changed_when: false
+      failed_when: false
+
+    - name: Créer la VM, l'agent réglé selon le cas tiré
+      ansible.builtin.command: >-
+        qm create {{ vmid }}
+        --name vm-agent
+        --ostype l26
+        --cpu host
+        --cores 1
+        --memory 1024
+        --agent {{ '0' if cas_lab == 'peripherique' else '1' }}
+        --net0 virtio,bridge=vmbr0
+        --scsihw virtio-scsi-single
+        --scsi0 local:0,import-from=/var/lib/vz/template/cache/debian-13-genericcloud-amd64.qcow2,format=qcow2
+        --ide2 local:cloudinit
+        --ipconfig0 ip={{ adresse_vm }}/24,gw={{ passerelle_lab }}
+        --nameserver {{ passerelle_lab }}
+        --sshkeys /root/.ssh/id_ed25519.pub
+        --cicustom user=local:snippets/pve-reparer-agent.yaml
+        --boot order=scsi0
+        --serial0 socket
+      when: existe.rc != 0
+      changed_when: true
+
+    - name: Démarrer la VM
+      ansible.builtin.command: qm start {{ vmid }}
+      register: demarrage
+      changed_when: demarrage.rc == 0
+      failed_when: demarrage.rc != 0 and 'already running' not in demarrage.stderr
+
+    - name: Attendre que le service témoin réponde
+      ansible.builtin.uri:
+        url: "http://{{ adresse_vm }}:8080/"
+        return_content: true
+      register: page
+      retries: 40
+      delay: 10
+      until: page is succeeded and nonce_lab in page.content
+
+    - name: Écrire le manifeste du lab
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifeste.md"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Manifeste du lab pve-reparer-agent
+
+          | Ressource | Valeur |
+          |---|---|
+          | VM | {{ vmid }} (vm-agent) |
+          | Adresse | {{ adresse_vm }}/24 |
+          | Accès à l'invité | `ssh debian@{{ adresse_vm }}` depuis le nœud, ou la console |
+          | Service témoin | HTTP sur le port 8080, à garder en service |
+
+          `qm agent {{ vmid }} ping` échoue. Rétablissez l'agent sans forcer
+          l'arrêt de la VM : sa charge doit s'arrêter proprement.

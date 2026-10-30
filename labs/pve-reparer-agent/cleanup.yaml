@@ -1,0 +1,43 @@
+---
+# Joué par `dsoxlab clean` et `dsoxlab reset` : il détruit la VM 180,
+# l'extrait cloud-init et le répertoire du lab, donc aussi le tirage du cas de
+# panne. Le nœud et l'image cloud restent.
+- name: Défaire le lab pve-reparer-agent
+  hosts: lab_target
+  become: true
+  vars:
+    vmid: 180
+  tasks:
+    - name: Mesurer si la VM du lab existe
+      ansible.builtin.command: qm status {{ vmid }}
+      register: existe
+      changed_when: false
+      failed_when: false
+
+    - name: Arrêter la VM du lab
+      ansible.builtin.command: qm stop {{ vmid }} --skiplock 1
+      when: existe.rc == 0
+      changed_when: true
+      failed_when: false
+
+    - name: Détruire la VM du lab et ses disques
+      ansible.builtin.command: qm destroy {{ vmid }} --purge 1 --destroy-unreferenced-disks 1
+      when: existe.rc == 0
+      changed_when: true
+
+    # La VM est recréée à chaque session, avec une nouvelle clé d'hôte, à la
+    # même adresse : sans ce retrait, SSH refuserait la session suivante.
+    - name: Oublier la clé d'hôte de la VM du lab
+      ansible.builtin.command: ssh-keygen -R 10.10.113.180
+      changed_when: true
+      failed_when: false
+
+    - name: Retirer l'extrait cloud-init du lab
+      ansible.builtin.file:
+        path: /var/lib/vz/snippets/pve-reparer-agent.yaml
+        state: absent
+
+    - name: Retirer le répertoire du lab
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-reparer-agent
+        state: absent
