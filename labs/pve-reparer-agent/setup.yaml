@@ -80,6 +80,14 @@
         nonce_lab: "{{ tirage.results[0].content | b64decode | trim }}"
         cas_lab: "{{ tirage.results[1].content | b64decode | trim }}"
 
+    # `--cicustom user=` REMPLACE le user-data que Proxmox génère : la clé
+    # passée par `--sshkeys` n'est alors jamais posée. Mesuré le 2026-10-30,
+    # « Permission denied (publickey) ». La clé va donc dans l'extrait.
+    - name: Lire la clé publique de root sur le nœud
+      ansible.builtin.slurp:
+        src: /root/.ssh/id_ed25519.pub
+      register: cle_noeud
+
     - name: Écrire la configuration cloud-init de la VM
       ansible.builtin.copy:
         dest: /var/lib/vz/snippets/pve-reparer-agent.yaml
@@ -89,6 +97,8 @@
         content: |
           #cloud-config
           hostname: vm-agent
+          ssh_authorized_keys:
+            - {{ cle_noeud.content | b64decode | trim }}
           {% if cas_lab == 'peripherique' %}
           packages:
             - qemu-guest-agent
@@ -135,7 +145,6 @@
         --ide2 local:cloudinit
         --ipconfig0 ip={{ adresse_vm }}/24,gw={{ passerelle_lab }}
         --nameserver {{ passerelle_lab }}
-        --sshkeys /root/.ssh/id_ed25519.pub
         --cicustom user=local:snippets/pve-reparer-agent.yaml
         --boot order=scsi0
         --serial0 socket
