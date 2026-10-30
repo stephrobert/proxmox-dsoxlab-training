@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+#
+# Créer une VM KVM dans Proxmox VE, l'installer, et la mettre en service.
+#
+# Contrat : TP `pve-creer-vm` du parcours Proxmox du site, profil `mono`. Le
+# setup pose un nœud prêt, une ISO Debian 13 vérifiée et un manifeste ; les
+# tests notent la VM produite, depuis le nœud qui joue le client.
+id: pve-creer-vm
+title: "Create a KVM VM and check that its service answers"
+level: l1
+description: |
+  Create VM 150 on Proxmox VE with the hardware contract taught by the lesson
+  (q35, OVMF, host CPU, VirtIO SCSI single, VirtIO network on vmbr0), install
+  Debian on it, make it boot from its disk with no ISO left, and serve a
+  witness page that a client outside the guest can read, before and after a
+  reboot.
+skills:
+  - proxmox
+  - virtual-machines
+  - kvm
+  - virtio
+distros:
+  - debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/creer-vm-kvm/
+lab_type: lab
+difficulty: beginner
+estimated_time: 45m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Proxmox VE 9 node, ready, with a Debian 13 ISO"
+      label_fr: "Nœud Proxmox VE 9 prêt, avec une ISO Debian 13"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: true

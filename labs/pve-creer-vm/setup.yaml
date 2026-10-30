@@ -1,0 +1,129 @@
+---
+# Joué par `dsoxlab run` : il pose la situation que le scénario décrit.
+#
+# L'état initial du contrat (profil `mono`) : un nœud Proxmox VE prêt, une ISO
+# Debian 13 CONTRÔLÉE dans le stockage, un stockage et un réseau nommés dans un
+# manifeste, et un service témoin fourni. La VM 150 n'existe pas : c'est
+# l'apprenant qui la crée, et les tests rendent 0 tant qu'elle n'existe pas.
+- name: Préparer le lab pve-creer-vm
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-creer-vm
+    vmid: 150
+    adresse_vm: 10.10.113.150
+    passerelle: 10.10.113.1
+    # L'ISO « current » de Debian 13 : son nom change à chaque point release,
+    # donc on lit le nom ET la somme dans SHA256SUMS, publié au même endroit.
+    iso_base: https://cdimage.debian.org/debian-cd/current/amd64/iso-cd
+
+  tasks:
+    - name: Disposer d'un nœud Proxmox VE prêt
+      ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+
+    # Sur un nœud posé par-dessus Debian, il n'existe pas de `local-lvm` : le
+    # seul stockage est le répertoire `local`. On lui ouvre les contenus dont
+    # les labs ont besoin, sans retirer ceux qu'il porte déjà.
+    - name: Ouvrir le stockage local aux disques, ISO et extraits
+      ansible.builtin.command: >-
+        pvesm set local --content iso,vztmpl,backup,images,rootdir,snippets
+      changed_when: true
+
+    - name: Lire le nom et la somme de l'ISO netinst publiée
+      ansible.builtin.uri:
+        url: "{{ iso_base }}/SHA256SUMS"
+        return_content: true
+      register: sommes
+      retries: 3
+      delay: 10
+      until: sommes is succeeded
+
+    - name: Retenir la ligne de l'ISO netinst
+      ansible.builtin.set_fact:
+        ligne_iso: "{{ sommes.content.splitlines() | select('search', 'netinst.iso$') | reject('search', 'edu|mac') | first }}"
+
+    - name: Télécharger l'ISO Debian 13 en vérifiant sa somme
+      ansible.builtin.get_url:
+        url: "{{ iso_base }}/{{ ligne_iso.split()[1] }}"
+        dest: "/var/lib/vz/template/iso/{{ ligne_iso.split()[1] }}"
+        checksum: "sha256:{{ ligne_iso.split()[0] }}"
+        mode: "0644"
+      register: iso
+      retries: 3
+      delay: 10
+      until: iso is succeeded
+
+    - name: Créer le répertoire du lab
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    # Le nonce prouve que la page servie a été posée POUR CE LAB : une page
+    # quelconque sur le port 8080 ne le contient pas. Il n'est tiré qu'une
+    # fois, pour qu'un `run` rejoué ne change pas la consigne en cours.
+    - name: Tirer le nonce du lab
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          od -An -N8 -tx1 /dev/urandom | tr -d ' \n' > nonce
+        chdir: "{{ lab_dir }}"
+        executable: /bin/bash
+        creates: "{{ lab_dir }}/nonce"
+
+    - name: Lire le nonce
+      ansible.builtin.slurp:
+        src: "{{ lab_dir }}/nonce"
+      register: nonce
+
+    - name: Écrire le manifeste du lab
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifeste.md"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Manifeste du lab pve-creer-vm
+
+          Ressources attribuées à ce lab, et à lui seul.
+
+          | Ressource | Valeur |
+          |---|---|
+          | VMID | {{ vmid }} |
+          | Nom de la VM | web-temoin |
+          | Stockage des disques | local (le seul stockage de ce nœud : il n'y a PAS de local-lvm) |
+          | ISO d'installation | local:iso/{{ ligne_iso.split()[1] }} |
+          | Pont | vmbr0 |
+          | Adresse de la VM | {{ adresse_vm }}/24, passerelle {{ passerelle }}, DNS {{ passerelle }} |
+          | Plafond | 2 cœurs, 2048 Mo de RAM |
+
+          ## Le service témoin
+
+          La VM doit servir, en HTTP sur le port 8080, une page qui contient
+          exactement cette ligne :
+
+              temoin {{ nonce.content | b64decode | trim }} vmid {{ vmid }}
+
+          Le service doit redémarrer avec la VM. Une unité systemd suffit :
+
+              [Unit]
+              Description=Service témoin du lab
+              After=network-online.target
+
+              [Service]
+              ExecStart=/usr/bin/python3 -m http.server 8080 --directory /srv/temoin
+
+              [Install]
+              WantedBy=multi-user.target
+
+          Placez la ligne dans /srv/temoin/index.html, l'unité dans
+          /etc/systemd/system/temoin.service, puis activez-la.
+
+    - name: Afficher la consigne
+      ansible.builtin.debug:
+        msg: >-
+          Le manifeste du lab est dans {{ lab_dir }}/manifeste.md. Créez la VM
+          {{ vmid }} depuis l'ISO fournie, installez Debian, puis servez la page
+          témoin sur {{ adresse_vm }}:8080.

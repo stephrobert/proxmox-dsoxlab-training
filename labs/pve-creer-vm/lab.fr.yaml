@@ -1,0 +1,10 @@
+# Surcharge française du lab pve-creer-vm. Elle ne porte QUE `title` et
+# `description` : tout autre champ y est ignoré en silence, parce que le
+# contrat ne se traduit pas.
+title: "Créer une VM KVM et vérifier que son service répond"
+description: |
+  Créer la VM 150 dans Proxmox VE avec le contrat matériel enseigné par la
+  leçon (q35, OVMF, CPU host, VirtIO SCSI single, carte VirtIO sur vmbr0), y
+  installer Debian, la faire démarrer sur son disque sans ISO restante, et
+  servir une page témoin qu'un client extérieur à l'invité lit avant et après
+  un redémarrage.

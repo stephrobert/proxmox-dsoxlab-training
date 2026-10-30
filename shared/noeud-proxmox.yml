@@ -1,0 +1,46 @@
+---
+# Un nœud Proxmox VE 9 prêt, avant tout lab qui en a besoin.
+#
+# Inclus en tête du setup de chaque lab du profil `mono` :
+#
+#     - name: Disposer d'un nœud Proxmox VE prêt
+#       ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+#
+# POURQUOI UNE GARDE. L'installation complète prend environ cinq minutes et
+# redémarre la machine. Un apprenant qui enchaîne les labs sur le même nœud,
+# ou qui a installé Proxmox lui-même dans le premier lab, ne doit ni attendre
+# ni voir son nœud réinstallé. La garde MESURE l'état, elle ne le suppose pas :
+# Proxmox répond, le pont porte une adresse, l'interface web sert une page.
+# Un seul des trois manque, et l'installation attestée est rejouée : chacune de
+# ses tâches est idempotente.
+- name: Mesurer si Proxmox VE répond déjà
+  ansible.builtin.command: pveversion
+  register: noeud_version
+  changed_when: false
+  failed_when: false
+
+- name: Mesurer si le pont vmbr0 porte une adresse
+  ansible.builtin.command: ip -4 -brief addr show vmbr0
+  register: noeud_pont
+  changed_when: false
+  failed_when: false
+
+- name: Mesurer si l'interface web sert une page
+  ansible.builtin.uri:
+    url: https://127.0.0.1:8006/
+    validate_certs: false
+    status_code: 200
+  register: noeud_web
+  failed_when: false
+
+- name: Installer Proxmox VE si le nœud n'est pas prêt
+  ansible.builtin.include_tasks: noeud-proxmox-installer.yml
+  vars:
+    cle_url: https://enterprise.proxmox.com/debian/proxmox-archive-keyring-trixie.gpg
+    cle_chemin: /usr/share/keyrings/proxmox-archive-keyring.gpg
+    cle_sha256: 136673be77aba35dcce385b28737689ad64fd785a797e57897589aed08db6e45
+  when: >-
+    noeud_version.rc != 0
+    or noeud_pont.rc != 0
+    or not (noeud_pont.stdout | regex_search('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/'))
+    or (noeud_web.status | default(0)) != 200

@@ -74,6 +74,7 @@ sections:
       instance.
     labs:
       - verifier-son-installation
+      - pve-creer-vm
 
   - id: exploiter
     title: "Secure and operate a platform"

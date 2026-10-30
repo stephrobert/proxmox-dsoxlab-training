@@ -1,0 +1,475 @@
+---
+# Installation de Proxmox VE 9 sur la Debian 13 nue du catalogue.
+#
+# C'est la solution attestée du lab `verifier-son-installation`, reprise telle
+# quelle : les labs qui suivent partent d'un nœud déjà installé (profil `mono`
+# du contrat de la formation), et seul le premier lab demande à l'apprenant
+# de l'installer lui-même. Toute correction se fait des deux côtés, ici et dans
+# `solution-en-clair/verifier-son-installation/solution.yaml`.
+#
+# Inclus par shared/noeud-proxmox.yml, seulement quand le nœud n'est pas prêt.
+# Ne s'inclut jamais directement depuis un setup.
+- name: Relever l'adresse et le nom de la machine
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      ip -4 -brief addr show scope global | awk 'NR==1 {sub("/.*","",$3); print $3}'
+    executable: /bin/bash
+  register: adresse
+  changed_when: false
+
+- name: Relever le nom d'hôte court
+  ansible.builtin.command: hostname --short
+  register: nom_court
+  changed_when: false
+
+# D ABORD, EMPECHER CLOUD-INIT DE DEFAIRE CE QUI SUIT.
+#
+# L image cloud porte `manage_etc_hosts: True` : cloud-init REGENERE
+# /etc/hosts depuis son gabarit a CHAQUE demarrage. Les deux taches
+# suivantes etaient donc correctes et sans effet durable, parce que ce
+# playbook redemarre la machine sur le noyau Proxmox.
+#
+# Chaine mesuree le 2026-10-28, et elle vaut d etre lue en entier :
+# apres le redemarrage, /etc/hosts reprend `127.0.1.1 pve.lab.lab pve.lab`
+# et perd le nom COURT `pve`. Faute de le trouver dans /etc/hosts,
+# `getent hosts pve` tombe sur la resolution multicast et rend l adresse
+# IPv6 LINK-LOCAL. Proxmox la met alors dans le SAN du certificat du noeud,
+# avec son scope :
+#     subjectAltName=...,IP:fe80::5054:d5ff:feb0:10%vmbr0,DNS:pve
+# et openssl refuse cette valeur (`bad ip address`). Le certificat n est
+# jamais genere, pveproxy ECOUTE sur 8006 sans rien servir, et le lab voit
+# un 000. Quatre causes empilees pour un seul symptome.
+- name: Empêcher cloud-init de régénérer /etc/hosts au démarrage
+  ansible.builtin.copy:
+    dest: /etc/cloud/cloud.cfg.d/99-lab-proxmox-hosts.cfg
+    content: |
+      # Proxmox exige que le nom du noeud resolve vers son adresse
+      # routable, et cloud-init ecraserait /etc/hosts a chaque demarrage.
+      manage_etc_hosts: false
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Retirer le nom d'hôte de la ligne 127.0.1.1
+  # Sinon `hostname --ip-address` rend une adresse de bouclage, et
+  # pve-cluster refuse de demarrer.
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    state: absent
+
+- name: Associer le nom d'hôte à l'adresse routable
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ adresse.stdout | trim }} {{ nom_court.stdout | trim }}.lab {{ nom_court.stdout | trim }}"
+    regexp: "^{{ adresse.stdout | trim | regex_escape }}\\s"
+    state: present
+
+- name: Vérifier que le nom résout vers une adresse routable
+  ansible.builtin.command: hostname --ip-address
+  register: resolution
+  changed_when: false
+  failed_when: resolution.stdout is search('^127\\.')
+
+# LA RESOLUTION DE NOMS, avant le premier acces reseau sortant.
+#
+# L image cloud confie /etc/resolv.conf a systemd-resolved : le fichier est
+# un LIEN vers son stub, et porte `nameserver 127.0.0.53`. Des que le reseau
+# passe sous ifupdown, plus bas dans ce playbook, resolved n a plus de
+# serveur amont : le stub reste en place, le service reste `active`, et plus
+# rien ne resout. Rien d autre ne parait casse.
+#
+# Mesure du 2026-10-28, au rejeu de ce playbook sur une machine deja
+# basculee : `getent hosts download.proxmox.com` echoue, `apt-get update`
+# rend « Failed to update apt cache after 5 retries », et le playbook meurt
+# a la neuvieme tache, donc AVANT la regeneration du certificat de pveproxy.
+# Le lab rendait alors 83/100 pour une cause qui n a rien a voir avec ce
+# qu il note.
+#
+# Proxmox pose de toute facon un resolv.conf statique : on le fait ici, de
+# maniere idempotente, et `follow: false` remplace le LIEN au lieu d ecrire
+# dans la cible du lien.
+- name: Poser une résolution de noms qui survive à la bascule réseau
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      # Pose par le lab Proxmox : un fichier statique, jamais le stub de
+      # systemd-resolved, que la bascule vers ifupdown prive de son amont.
+      nameserver {{ ansible_default_ipv4.gateway }}
+      nameserver 1.1.1.1
+    owner: root
+    group: root
+    mode: "0644"
+    follow: false
+
+- name: Vérifier que la résolution de noms fonctionne vraiment
+  # Un fichier bien ecrit ne prouve pas qu un nom se resout : on le mesure.
+  ansible.builtin.command: getent hosts download.proxmox.com
+  register: resolution_dns
+  changed_when: false
+  retries: 3
+  delay: 5
+  until: resolution_dns.rc == 0
+
+- name: Télécharger la clé de signature des dépôts Proxmox
+  ansible.builtin.get_url:
+    url: "{{ cle_url }}"
+    dest: "{{ cle_chemin }}"
+    checksum: "sha256:{{ cle_sha256 }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Déclarer le dépôt sans abonnement, au format deb822
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/pve-install-repo.sources
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Types: deb
+      URIs: http://download.proxmox.com/debian/pve
+      Suites: trixie
+      Components: pve-no-subscription
+      Signed-By: {{ cle_chemin }}
+
+# Sur une machine VIERGE, le depot entreprise n existe pas encore et cette
+# tache ne fait rien. Elle compte quand on REJOUE le playbook : l
+# installation de proxmox-ve ayant ajoute ce depot au passage precedent,
+# la mise a niveau ci-dessous echouerait sur son 401. Un playbook de
+# reference doit pouvoir se rejouer.
+- name: Désactiver le dépôt entreprise s'il est déjà présent
+  ansible.builtin.lineinfile:
+    path: /etc/apt/sources.list.d/pve-enterprise.sources
+    line: "Enabled: false"
+    state: present
+  failed_when: false
+
+- name: Mettre le système à niveau depuis les dépôts déclarés
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: full
+  register: mise_a_niveau
+  retries: 3
+  delay: 10
+  until: mise_a_niveau is succeeded
+
+# LE PIEGE QUI COUTE LA MACHINE, mesure le 2026-10-27 sur ce banc.
+#
+# Les images cloud de Debian embarquent `grub-cloud-amd64`, un metapaquet
+# qui pretend servir BIOS ET UEFI : il tire `grub-pc-bin` autant que
+# `grub-efi-amd64-bin`. Quand l installation du noyau Proxmox declenche la
+# reconfiguration de GRUB, `grub-pc` tente un `grub-install` sur un disque
+# BIOS, echoue sur une machine EFI, et laisse dpkg en erreur :
+#
+#     You must correct your GRUB install devices before proceeding
+#     dpkg: error processing package grub-pc (--configure)
+#
+# L installation s arrete alors au milieu, paquets a moitie configures. La
+# parade consiste a poser le VRAI chargeur EFI AVANT de toucher au noyau :
+# `grub-efi-amd64` remplace proprement `grub-cloud-amd64` et chasse
+# `grub-pc`.
+#
+# On ne le fait que sur une machine EFI : sur un vrai BIOS, grub-pc est le
+# bon paquet et le retirer casserait l amorcage.
+- name: Détecter le mode d'amorçage de la machine
+  ansible.builtin.stat:
+    path: /sys/firmware/efi
+  register: firmware_efi
+
+- name: Poser le chargeur EFI avant le noyau, sur une machine UEFI
+  ansible.builtin.apt:
+    name: grub-efi-amd64
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  when: firmware_efi.stat.exists
+
+- name: Installer le noyau Proxmox
+  ansible.builtin.apt:
+    name: proxmox-default-kernel
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Redémarrer sur ce noyau, avant d'installer Proxmox
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+    post_reboot_delay: 15
+
+- name: Vérifier que la machine tourne bien sur un noyau Proxmox
+  ansible.builtin.command: uname -r
+  register: noyau
+  changed_when: false
+  failed_when: "'-pve' not in noyau.stdout"
+
+- name: Installer Proxmox VE et ses compagnons
+  ansible.builtin.apt:
+    name:
+      - proxmox-ve
+      - postfix
+      - open-iscsi
+      - chrony
+    state: present
+  environment:
+    # Postfix pose une question en mode interactif ; sans cela, l installation
+    # se bloque indefiniment sur un dialogue que personne ne lit.
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Retirer le noyau Debian, devenu inutile
+  ansible.builtin.apt:
+    name:
+      - linux-image-amd64
+    state: absent
+    purge: false
+  failed_when: false
+
+- name: Retirer os-prober, qui n'a pas d'objet sans double amorçage
+  ansible.builtin.apt:
+    name: os-prober
+    state: absent
+  failed_when: false
+
+# LE DEPOT ENTREPRISE, ajoute par l installation de proxmox-ve, repond 401
+# sans abonnement et fait echouer TOUT `apt update`. Mesure le 2026-10-27 :
+#   E: Failed to fetch https://enterprise.proxmox.com/... 401 Unauthorized
+# Le format deb822 n a pas de ligne « deb » a commenter : on le desactive
+# par un champ `Enabled: false`.
+- name: Désactiver le dépôt entreprise, qui répond 401 sans abonnement
+  ansible.builtin.lineinfile:
+    path: /etc/apt/sources.list.d/pve-enterprise.sources
+    line: "Enabled: false"
+    state: present
+  failed_when: false
+
+- name: Vérifier qu'apt fonctionne désormais
+  ansible.builtin.apt:
+    update_cache: true
+
+# LE RESEAU, et c est le second piege des images cloud. Elles confient le
+# reseau a systemd-networkd, alors que Proxmox attend ifupdown : son
+# interface web ecrit dans /etc/network/interfaces, et un pont declare
+# ailleurs n est jamais monte. Mesure le 2026-10-27 : le fichier
+# /etc/network/interfaces.d/vmbr0 existait, et vmbr0 n existait pas, parce
+# que /etc/network/interfaces ne lit meme pas ce repertoire.
+#
+# On ecrit donc la configuration ifupdown COMPLETE, puis on bascule au
+# redemarrage : changer de gestionnaire de reseau a chaud coupe la session
+# par laquelle on travaille.
+- name: Relever l'interface physique à mettre dans le pont
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      ip -4 -brief addr show scope global | awk 'NR==1 {print $1}'
+    executable: /bin/bash
+  register: interface_physique
+  changed_when: false
+
+- name: Relever la passerelle courante
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      ip -4 route show default | awk 'NR==1 {print $3}'
+    executable: /bin/bash
+  register: passerelle
+  changed_when: false
+
+- name: Écrire la configuration ifupdown complète, pont compris
+  ansible.builtin.copy:
+    dest: /etc/network/interfaces
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # interfaces(5) file used by ifup(8) and ifdown(8)
+      source /etc/network/interfaces.d/*
+
+      auto lo
+      iface lo inet loopback
+
+      iface {{ interface_physique.stdout | trim }} inet manual
+
+      auto vmbr0
+      iface vmbr0 inet static
+          address {{ adresse.stdout | trim }}/24
+          gateway {{ passerelle.stdout | trim }}
+          bridge-ports {{ interface_physique.stdout | trim }}
+          bridge-stp off
+          bridge-fd 0
+  when: interface_physique.stdout | trim != 'vmbr0'
+
+- name: Retirer la déclaration de pont devenue redondante
+  ansible.builtin.file:
+    path: /etc/network/interfaces.d/vmbr0
+    state: absent
+
+# LA BASCULE RESEAU EST L OPERATION QUI PEUT COUPER L UNIQUE ACCES a la
+# machine. Mesure le 2026-10-27 : jouee sans filet, elle a rendu une VM
+# injoignable, bootee sur « pve login: » et muette sur le reseau, ARP
+# INCOMPLETE. Il a fallu la detruire.
+#
+# On ne coupe donc l ancien gestionnaire qu APRES avoir prouve que le pont
+# monte. `ifup --no-act` simule sans rien changer, et `ifquery` verifie que
+# la declaration est comprise par l outil REELLEMENT installe : Proxmox
+# remplace ifupdown par ifupdown2, dont la syntaxe est proche mais pas
+# identique.
+# LA BASCULE RESEAU EST L OPERATION QUI PEUT COUPER L UNIQUE ACCES a la
+# machine. Mesure le 2026-10-27 : jouee avec un redemarrage, elle a rendu
+# une VM injoignable, bootee sur « pve login: » et muette sur le reseau,
+# ARP INCOMPLETE. Il a fallu la detruire.
+#
+# La methode retenue est celle du role public proxmox-onprem, qui traite
+# exactement ce cas, Debian 13 vers PVE 9 :
+# https://github.com/resumepilot360/proxmox-onprem
+#
+# Elle tient en un point : ON NE REDEMARRE PAS. L installation de
+# proxmox-ve a remplace ifupdown par IFUPDOWN2, qui applique une nouvelle
+# configuration a chaud par `ifreload -a` en conservant les interfaces
+# deja montees. Le noeud reste donc joignable pendant la bascule, et une
+# erreur se repare au lieu de couper la machine.
+#
+# systemd-networkd n est pas masque ici : ifupdown2 prend la main sur les
+# interfaces qu il declare, et le desactiver avant d avoir prouve le pont
+# est precisement ce qui a coute la VM.
+- name: Vérifier quel outil gère réellement les interfaces
+  ansible.builtin.stat:
+    path: /sbin/ifreload
+  register: ifupdown2
+
+- name: Créer le répertoire du verrou d'ifupdown2, absent des images cloud
+  # Sur l image cloud du banc, releve le 2026-10-28, /run/network etait
+  # ABSENT. Ce qui le cree d ordinaire n a pas ete etabli : l unite
+  # networking.service d ifupdown ne fait aucun mkdir, contrairement a ce
+  # qu une premiere version de ce commentaire affirmait. Ce qui est mesure,
+  # c est que sans ce repertoire ifreload ne peut pas poser son verrou et
+  # echoue indefiniment, et qu avec lui il rend 0 du premier coup.
+  ansible.builtin.file:
+    path: /run/network
+    state: directory
+    mode: "0755"
+  when: ifupdown2.stat.exists
+
+- name: Appliquer la configuration à chaud avec ifupdown2
+  # `ifreload -a` relit tout le fichier et n applique que les ecarts, sans
+  # couper les interfaces inchangees.
+  #
+  # Il pose un verrou dans /run/network/.lock, repertoire que la tache
+  # precedente cree. CE N EST PAS un conflit avec une autre instance,
+  # contrairement a ce que son message laisse croire :
+  #     error: Another instance of this program is already running.  (rc 89)
+  # Mesure du 2026-10-28, a la main sur le banc : aucun processus ifreload
+  # ne tournait et /run/network n existait pas. L echec de creation du
+  # verrou est rapporte comme un conflit, et la premiere version de cette
+  # solution a donc reessaye douze fois pendant deux minutes avant
+  # d abandonner, laissant le pont non monte et le lab a 67/100.
+  # Les tentatives sont conservees pour le cas ou un verrou legitime
+  # serait tenu, mais ce n est plus elles qui corrigent le defaut.
+  ansible.builtin.command: ifreload -a
+  register: rechargement
+  changed_when: rechargement.rc == 0
+  failed_when: rechargement.rc not in [0, 89]
+  until: rechargement.rc == 0
+  retries: 12
+  delay: 10
+  when: ifupdown2.stat.exists
+
+- name: Monter le pont avec ifupdown, si ifupdown2 n'est pas là
+  ansible.builtin.command: ifup vmbr0
+  register: montage_simple
+  changed_when: true
+  failed_when: false
+  when: not ifupdown2.stat.exists
+
+- name: Laisser au pont le temps de prendre son adresse
+  ansible.builtin.wait_for:
+    timeout: 10
+  delegate_to: localhost
+  become: false
+
+- name: Vérifier que le pont porte bien l'adresse
+  ansible.builtin.shell:
+    cmd: ip -brief a show vmbr0
+    executable: /bin/bash
+  register: pont
+  changed_when: false
+  # `is not search(...)` n est PAS du Jinja valide, et le prefixe r'...' de
+  # Python n existe pas non plus : l expression levait
+  #     Syntax error in expression: expected token ',', got 'string'
+  # et la tache echouait alors que le pont portait bien son adresse. Un
+  # controle qui plante ne mesure rien. Mesure le 2026-10-28.
+  failed_when: not (pont.stdout | regex_search('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/'))
+
+# LE CERTIFICAT. pveproxy peut tres bien ECOUTER sur 8006 pendant que ses
+# workers meurent en boucle, faute de /etc/pve/local/pve-ssl.pem :
+#   failed to use local certificate chain
+# L interface est alors injoignable, et un controle qui se contente de
+# regarder le port ouvert ne voit rien. Mesure le 2026-10-27.
+# /ETC/HOSTS, UNE SECONDE FOIS, ET C EST CELLE-CI QUI COMPTE.
+#
+# Les taches du debut de playbook sont necessaires pour que pve-cluster
+# demarre, mais elles ne survivent pas : la machine redemarre entre-temps
+# sur le noyau Proxmox, et cloud-init REGENERE /etc/hosts depuis son
+# gabarit. Mesure du 2026-10-28 : `uptime -s` donne 00:57:50,
+# cloud-config.service se termine a 00:59:54, et c est exactement
+# l horodatage du fichier. Les deux taches du debut avaient pourtant
+# rapporte « changed ».
+#
+# Poser `manage_etc_hosts: false` dans /etc/cloud/cloud.cfg.d/ NE SUFFIT
+# PAS, et c est le piege : le user-data du seed cloud-init a une priorite
+# superieure a ce repertoire. `cloud-init query manage_etc_hosts` rend
+# d ailleurs CI_MISSING_JINJA_VAR. On n essaie donc pas de convaincre
+# cloud-init : on ecrit APRES son dernier passage.
+#
+# Ce que /etc/hosts doit obtenir, et pourquoi : nsswitch vaut
+#     hosts: files myhostname resolve [!UNAVAIL=return] dns
+# Sans entree dans `files`, c est NSS-MYHOSTNAME qui resout le nom du
+# noeud, et il rend TOUTES les adresses de la machine, l IPv6 LINK-LOCAL
+# en tete. Proxmox la place alors dans le SAN du certificat avec son scope
+# `%vmbr0`, qu openssl refuse, et le certificat n est jamais genere.
+- name: Réécrire /etc/hosts après le dernier passage de cloud-init
+  ansible.builtin.copy:
+    dest: /etc/hosts
+    content: |
+      # Pose par le lab Proxmox, APRES cloud-init. Le nom du noeud doit
+      # resoudre vers son adresse routable, et par `files`, sinon
+      # nss-myhostname rend l IPv6 link-local et le certificat du noeud
+      # devient impossible a generer.
+      127.0.0.1 localhost
+      {{ adresse.stdout | trim }} {{ nom_court.stdout | trim }}.lab {{ nom_court.stdout | trim }}
+
+      ::1 localhost ip6-localhost ip6-loopback
+      ff02::1 ip6-allnodes
+      ff02::2 ip6-allrouters
+    owner: root
+    group: root
+    mode: "0644"
+
+# Le critere n est pas « une IPv4 existe », c est « AUCUNE link-local ne
+# sort », puisque c est elle qui casse la generation du certificat.
+- name: Vérifier que le nom du nœud ne résout plus vers une link-local
+  ansible.builtin.command: getent ahosts {{ nom_court.stdout | trim }}
+  register: resolution_noeud
+  changed_when: false
+  failed_when: >-
+    resolution_noeud.stdout is search('fe80:')
+    or not (resolution_noeud.stdout | regex_search('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'))
+
+- name: Régénérer les certificats du nœud
+  ansible.builtin.command: pvecm updatecerts --force
+  changed_when: true
+
+- name: Redémarrer pveproxy pour qu'il les prenne
+  ansible.builtin.systemd_service:
+    name: pveproxy
+    state: restarted
+
+- name: Vérifier que l'interface web RÉPOND, et pas seulement qu'elle écoute
+  ansible.builtin.uri:
+    url: https://127.0.0.1:8006/
+    validate_certs: false
+    status_code: 200
+  retries: 5
+  delay: 5
+  register: interface_web
+  until: interface_web is succeeded
