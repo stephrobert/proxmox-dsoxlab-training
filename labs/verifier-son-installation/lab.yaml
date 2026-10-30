@@ -29,7 +29,7 @@ skills:
   - storage
 distros:
   - debian13
-doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation/
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation-debian/
 lab_type: lab
 difficulty: beginner
 estimated_time: 30m
