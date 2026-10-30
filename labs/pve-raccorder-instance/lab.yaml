@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+#
+# Raccorder une VM au réseau du lab, et corriger la panne au bon étage.
+#
+# Contrat : TP `pve-raccorder-instance` du parcours Proxmox du site, profil
+# `mono`. Le setup branche la carte d'une VM témoin sur un pont isolé ; les
+# tests notent le raccordement depuis le nœud, qui joue le client.
+id: pve-raccorder-instance
+title: "Connect a VM to the network and fix the fault at the right layer"
+level: l1
+description: |
+  A witness VM runs and its service listens, yet no client reaches it: its
+  card is plugged into an isolated bridge. Find the cause from the node, plug
+  the card of that VM into vmbr0 without recreating the VM or touching the
+  isolated bridge, and prove that the fix survives a guest reboot and a reload
+  of the node network.
+skills:
+  - proxmox
+  - networking
+  - linux-bridge
+  - troubleshooting
+distros:
+  - debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/reseau/
+lab_type: lab
+difficulty: beginner
+estimated_time: 30m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Proxmox VE 9 node, with a witness VM on an isolated bridge"
+      label_fr: "Nœud Proxmox VE 9, avec une VM témoin sur un pont isolé"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: true

@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+#
+# Créer un conteneur LXC non privilégié, borné, et y faire tourner un service.
+#
+# Contrat : TP `pve-creer-lxc` du parcours Proxmox du site, profil `mono`. Le
+# setup pose un nœud prêt, le modèle Debian 13 vérifié par pveam et un
+# manifeste ; les tests notent l'état effectif depuis le nœud.
+id: pve-creer-lxc
+title: "Create an unprivileged LXC container with bounded resources"
+level: l1
+description: |
+  Create container 170 from the verified Debian 13 template, unprivileged, with
+  one core, 512 MB of RAM and no swap, run a service in it under a dedicated
+  system user, and prove from the node that isolation and limits are really
+  applied and that data and service survive a reboot.
+skills:
+  - proxmox
+  - lxc
+  - containers
+  - cgroups
+distros:
+  - debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/conteneurs-lxc/
+lab_type: lab
+difficulty: beginner
+estimated_time: 30m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Proxmox VE 9 node, ready, with the Debian 13 template"
+      label_fr: "Nœud Proxmox VE 9 prêt, avec le modèle Debian 13"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: true

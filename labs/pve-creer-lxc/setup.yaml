@@ -1,0 +1,117 @@
+---
+# Joué par `dsoxlab run` : il pose la situation que le scénario décrit.
+#
+# L'état initial du contrat (profil `mono`) : un nœud prêt, un modèle Linux
+# VALIDÉ, le réseau du lab, et un utilisateur de service et un port demandés.
+# Le conteneur 170 n'existe pas : c'est l'apprenant qui le crée.
+- name: Préparer le lab pve-creer-lxc
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-creer-lxc
+    ctid: 170
+    adresse_ct: 10.10.113.170
+    passerelle_lab: 10.10.113.1
+
+  tasks:
+    - name: Disposer d'un nœud Proxmox VE prêt
+      ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+
+    - name: Ouvrir le stockage local aux modèles et aux conteneurs
+      ansible.builtin.command: >-
+        pvesm set local --content iso,vztmpl,backup,images,rootdir,snippets
+      changed_when: true
+
+    # pveam lit l'index signé des modèles et vérifie la somme de l'archive :
+    # c'est ce qui fait du modèle un modèle « validé ».
+    - name: Mettre à jour l'index des modèles
+      ansible.builtin.command: pveam update
+      register: index_modeles
+      changed_when: false
+      retries: 3
+      delay: 10
+      until: index_modeles.rc == 0
+
+    - name: Lire le nom du modèle Debian 13 standard publié
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          pveam available --section system | awk '$2 ~ /^debian-13-standard_/ {print $2}' | sort -V | tail -1
+        executable: /bin/bash
+      register: modele
+      changed_when: false
+      failed_when: modele.stdout | trim == ''
+
+    - name: Télécharger le modèle, vérifié par pveam
+      ansible.builtin.command: pveam download local {{ modele.stdout | trim }}
+      args:
+        creates: "/var/lib/vz/template/cache/{{ modele.stdout | trim }}"
+
+    - name: Créer le répertoire du lab
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Tirer le nonce du lab
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          od -An -N8 -tx1 /dev/urandom | tr -d ' \n' > nonce
+        chdir: "{{ lab_dir }}"
+        executable: /bin/bash
+        creates: "{{ lab_dir }}/nonce"
+
+    - name: Lire le nonce
+      ansible.builtin.slurp:
+        src: "{{ lab_dir }}/nonce"
+      register: nonce
+
+    - name: Écrire le manifeste du lab
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifeste.md"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Manifeste du lab pve-creer-lxc
+
+          | Ressource | Valeur |
+          |---|---|
+          | CTID | {{ ctid }} |
+          | Nom d'hôte | ct-web |
+          | Modèle | local:vztmpl/{{ modele.stdout | trim }} |
+          | Stockage | local |
+          | Pont et adresse | vmbr0, {{ adresse_ct }}/24, passerelle {{ passerelle_lab }}, DNS {{ passerelle_lab }} |
+          | Ressources | 1 cœur, 512 Mo de RAM, pas de swap |
+          | Conteneur | NON privilégié |
+
+          ## Le service
+
+          Le conteneur sert, en HTTP sur le port 8080, une page qui contient
+          exactement cette ligne :
+
+              temoin {{ nonce.content | b64decode | trim }} ctid {{ ctid }}
+
+          Le service tourne sous l'utilisateur système `web`, jamais sous root,
+          et il redémarre avec le conteneur. Le modèle standard ne porte pas
+          python3 : installez-le avec apt, puis une unité systemd suffit :
+
+              [Unit]
+              Description=Service témoin du lab
+              After=network-online.target
+
+              [Service]
+              User=web
+              ExecStart=/usr/bin/python3 -m http.server 8080 --directory /srv/temoin
+
+              [Install]
+              WantedBy=multi-user.target
+
+    - name: Afficher la consigne
+      ansible.builtin.debug:
+        msg: >-
+          Le manifeste du lab est dans {{ lab_dir }}/manifeste.md. Créez le
+          conteneur {{ ctid }} et servez la page témoin sur {{ adresse_ct }}:8080.

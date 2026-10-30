@@ -186,9 +186,11 @@ Installer Proxmox VE, depuis l'ISO ou sur une Debian 13, et le vérifier face à
 | Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
 |---|---|---|---|---|
 | `verifier-son-installation` | Vérifier votre installation de Proxmox face au cahier des charges | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation-debian/) |
+| `pve-raccorder-instance` | Raccorder une VM au réseau et corriger la panne au bon étage | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/reseau/) |
 | `pve-creer-vm` | Créer une VM KVM et vérifier que son service répond | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/creer-vm-kvm/) |
+| `pve-creer-lxc` | Créer un conteneur LXC non privilégié aux ressources bornées | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/conteneurs-lxc/) |
 
-_2 labs, table générée par `scripts/gen_catalog.py`._
+_4 labs, table générée par `scripts/gen_catalog.py`._
 <!-- LABS:END -->
 
 ## Contribuer

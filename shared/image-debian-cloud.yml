@@ -1,0 +1,31 @@
+---
+# L'image cloud Debian 13 que les labs posent comme disque de leurs VM témoins.
+#
+# Inclus par le setup d'un lab qui a besoin d'une VM déjà installée :
+#
+#     - name: Disposer de l'image cloud Debian 13
+#       ansible.builtin.include_tasks: ../../shared/image-debian-cloud.yml
+#
+# La somme est lue dans SHA512SUMS, publié au même endroit que l'image, et
+# vérifiée au téléchargement : une image prise sans contrôle viderait de son
+# sens tout ce qu'un lab y construit. L'image n'est téléchargée qu'une fois par
+# nœud, `get_url` ne la reprend que si sa somme ne correspond plus.
+- name: Lire la somme publiée de l'image cloud Debian 13
+  ansible.builtin.uri:
+    url: https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS
+    return_content: true
+  register: image_sommes
+  retries: 3
+  delay: 10
+  until: image_sommes is succeeded
+
+- name: Télécharger l'image cloud Debian 13 en vérifiant sa somme
+  ansible.builtin.get_url:
+    url: https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2
+    dest: /var/lib/vz/template/cache/debian-13-genericcloud-amd64.qcow2
+    checksum: "sha512:{{ (image_sommes.content.splitlines() | select('search', 'debian-13-genericcloud-amd64.qcow2$') | first).split()[0] }}"
+    mode: "0644"
+  register: image_cloud
+  retries: 3
+  delay: 10
+  until: image_cloud is succeeded

@@ -1,0 +1,162 @@
+---
+# Joué par `dsoxlab run` : il pose la panne que le scénario décrit.
+#
+# L'état initial du contrat (profil `mono`) : un nœud Proxmox prêt, une VM
+# témoin déjà installée qui sert une page portant un nonce, et un adressage
+# réservé. La panne : la carte réseau de la VM est branchée sur `vmbr9`, un
+# pont ISOLÉ, sans port physique. La VM tourne, son service écoute, et
+# pourtant aucun client ne la joint.
+- name: Préparer le lab pve-raccorder-instance
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-raccorder-instance
+    vmid: 160
+    adresse_vm: 10.10.113.160
+    passerelle: 10.10.113.1
+
+  tasks:
+    - name: Disposer d'un nœud Proxmox VE prêt
+      ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+
+    - name: Disposer de l'image cloud Debian 13
+      ansible.builtin.include_tasks: ../../shared/image-debian-cloud.yml
+
+    - name: Ouvrir le stockage local aux disques et aux extraits
+      ansible.builtin.command: >-
+        pvesm set local --content iso,vztmpl,backup,images,rootdir,snippets
+      changed_when: true
+
+    # Le pont isolé : déclaré dans /etc/network/interfaces, comme un pont créé
+    # depuis l'interface web, pour que la panne survive à un rechargement.
+    - name: Déclarer le pont isolé vmbr9, sans port physique
+      ansible.builtin.blockinfile:
+        path: /etc/network/interfaces
+        marker: "# {mark} lab pve-raccorder-instance"
+        block: |
+          auto vmbr9
+          iface vmbr9 inet manual
+              bridge-ports none
+              bridge-stp off
+              bridge-fd 0
+              # Pont du lab : isolé, aucune carte physique.
+
+    - name: Créer le répertoire du verrou d'ifupdown2, absent après un redémarrage
+      ansible.builtin.file:
+        path: /run/network
+        state: directory
+        mode: "0755"
+
+    - name: Appliquer la configuration réseau à chaud
+      ansible.builtin.command: ifreload -a
+      changed_when: true
+
+    - name: Créer le répertoire du lab
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Tirer le nonce du lab
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          od -An -N8 -tx1 /dev/urandom | tr -d ' \n' > nonce
+        chdir: "{{ lab_dir }}"
+        executable: /bin/bash
+        creates: "{{ lab_dir }}/nonce"
+
+    - name: Lire le nonce
+      ansible.builtin.slurp:
+        src: "{{ lab_dir }}/nonce"
+      register: nonce
+
+    - name: Écrire la configuration cloud-init de la VM témoin
+      ansible.builtin.copy:
+        dest: /var/lib/vz/snippets/pve-raccorder-instance.yaml
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          #cloud-config
+          hostname: temoin-reseau
+          write_files:
+            - path: /srv/temoin/index.html
+              permissions: "0644"
+              content: |
+                temoin {{ nonce.content | b64decode | trim }} vmid {{ vmid }}
+            - path: /etc/systemd/system/temoin.service
+              permissions: "0644"
+              content: |
+                [Unit]
+                Description=Service témoin du lab
+                After=network-online.target
+
+                [Service]
+                ExecStart=/usr/bin/python3 -m http.server 8080 --directory /srv/temoin
+
+                [Install]
+                WantedBy=multi-user.target
+          runcmd:
+            - systemctl daemon-reload
+            - systemctl enable --now temoin.service
+
+    - name: Mesurer si la VM témoin existe déjà
+      ansible.builtin.command: qm status {{ vmid }}
+      register: existe
+      changed_when: false
+      failed_when: false
+
+    # La panne est là : bridge=vmbr9. Tout le reste de la VM est correct.
+    - name: Créer la VM témoin, carte branchée sur le pont isolé
+      ansible.builtin.command: >-
+        qm create {{ vmid }}
+        --name temoin-reseau
+        --ostype l26
+        --cpu host
+        --cores 1
+        --memory 1024
+        --net0 virtio,bridge=vmbr9
+        --scsihw virtio-scsi-single
+        --scsi0 local:0,import-from=/var/lib/vz/template/cache/debian-13-genericcloud-amd64.qcow2,format=qcow2
+        --ide2 local:cloudinit
+        --ipconfig0 ip={{ adresse_vm }}/24,gw={{ passerelle }}
+        --nameserver {{ passerelle }}
+        --cicustom user=local:snippets/pve-raccorder-instance.yaml
+        --boot order=scsi0
+        --serial0 socket
+      when: existe.rc != 0
+      changed_when: true
+
+    - name: Démarrer la VM témoin
+      ansible.builtin.command: qm start {{ vmid }}
+      register: demarrage
+      changed_when: demarrage.rc == 0
+      failed_when: demarrage.rc != 0 and 'already running' not in demarrage.stderr
+
+    - name: Écrire le manifeste du lab
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifeste.md"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Manifeste du lab pve-raccorder-instance
+
+          | Ressource | Valeur |
+          |---|---|
+          | VM témoin | {{ vmid }} (temoin-reseau) |
+          | Adresse réservée | {{ adresse_vm }}/24, passerelle {{ passerelle }} |
+          | Service témoin | HTTP sur le port 8080 |
+          | Réseau du lab | vmbr0, relié à la carte physique du nœud |
+
+          La VM tourne et son service écoute, mais aucun client ne la joint.
+          Ne recréez pas la VM : son disque porte la page témoin du lab.
+
+    - name: Afficher la consigne
+      ansible.builtin.debug:
+        msg: >-
+          La VM {{ vmid }} ne répond pas sur {{ adresse_vm }}:8080. Le manifeste
+          du lab est dans {{ lab_dir }}/manifeste.md.

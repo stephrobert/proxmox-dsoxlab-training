@@ -1,0 +1,31 @@
+---
+# Joué par `dsoxlab clean` et `dsoxlab reset` : il détruit le conteneur 170 et
+# le répertoire du lab. Le nœud et le modèle restent : d'autres labs s'en
+# servent.
+- name: Défaire le lab pve-creer-lxc
+  hosts: lab_target
+  become: true
+  vars:
+    ctid: 170
+  tasks:
+    - name: Mesurer si le conteneur du lab existe
+      ansible.builtin.command: pct status {{ ctid }}
+      register: existe
+      changed_when: false
+      failed_when: false
+
+    - name: Arrêter le conteneur du lab
+      ansible.builtin.command: pct stop {{ ctid }} --skiplock 1
+      when: existe.rc == 0
+      changed_when: true
+      failed_when: false
+
+    - name: Détruire le conteneur du lab et son disque
+      ansible.builtin.command: pct destroy {{ ctid }} --purge 1
+      when: existe.rc == 0
+      changed_when: true
+
+    - name: Retirer le répertoire du lab
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-creer-lxc
+        state: absent

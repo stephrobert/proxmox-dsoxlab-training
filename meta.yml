@@ -74,7 +74,9 @@ sections:
       instance.
     labs:
       - verifier-son-installation
+      - pve-raccorder-instance
       - pve-creer-vm
+      - pve-creer-lxc
 
   - id: exploiter
     title: "Secure and operate a platform"

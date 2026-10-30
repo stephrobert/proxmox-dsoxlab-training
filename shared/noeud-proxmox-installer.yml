@@ -15,12 +15,12 @@
       set -o pipefail
       ip -4 -brief addr show scope global | awk 'NR==1 {sub("/.*","",$3); print $3}'
     executable: /bin/bash
-  register: adresse
+  register: noeud_adresse
   changed_when: false
 
 - name: Relever le nom d'hôte court
   ansible.builtin.command: hostname --short
-  register: nom_court
+  register: noeud_nom_court
   changed_when: false
 
 # D ABORD, EMPECHER CLOUD-INIT DE DEFAIRE CE QUI SUIT.
@@ -62,15 +62,15 @@
 - name: Associer le nom d'hôte à l'adresse routable
   ansible.builtin.lineinfile:
     path: /etc/hosts
-    line: "{{ adresse.stdout | trim }} {{ nom_court.stdout | trim }}.lab {{ nom_court.stdout | trim }}"
-    regexp: "^{{ adresse.stdout | trim | regex_escape }}\\s"
+    line: "{{ noeud_adresse.stdout | trim }} {{ noeud_nom_court.stdout | trim }}.lab {{ noeud_nom_court.stdout | trim }}"
+    regexp: "^{{ noeud_adresse.stdout | trim | regex_escape }}\\s"
     state: present
 
 - name: Vérifier que le nom résout vers une adresse routable
   ansible.builtin.command: hostname --ip-address
-  register: resolution
+  register: noeud_resolution
   changed_when: false
-  failed_when: resolution.stdout is search('^127\\.')
+  failed_when: noeud_resolution.stdout is search('^127\\.')
 
 # LA RESOLUTION DE NOMS, avant le premier acces reseau sortant.
 #
@@ -106,11 +106,11 @@
 - name: Vérifier que la résolution de noms fonctionne vraiment
   # Un fichier bien ecrit ne prouve pas qu un nom se resout : on le mesure.
   ansible.builtin.command: getent hosts download.proxmox.com
-  register: resolution_dns
+  register: noeud_resolution_dns
   changed_when: false
   retries: 3
   delay: 5
-  until: resolution_dns.rc == 0
+  until: noeud_resolution_dns.rc == 0
 
 - name: Télécharger la clé de signature des dépôts Proxmox
   ansible.builtin.get_url:
@@ -150,10 +150,10 @@
   ansible.builtin.apt:
     update_cache: true
     upgrade: full
-  register: mise_a_niveau
+  register: noeud_mise_a_niveau
   retries: 3
   delay: 10
-  until: mise_a_niveau is succeeded
+  until: noeud_mise_a_niveau is succeeded
 
 # LE PIEGE QUI COUTE LA MACHINE, mesure le 2026-10-27 sur ce banc.
 #
@@ -176,7 +176,7 @@
 - name: Détecter le mode d'amorçage de la machine
   ansible.builtin.stat:
     path: /sys/firmware/efi
-  register: firmware_efi
+  register: noeud_firmware_efi
 
 - name: Poser le chargeur EFI avant le noyau, sur une machine UEFI
   ansible.builtin.apt:
@@ -184,7 +184,7 @@
     state: present
   environment:
     DEBIAN_FRONTEND: noninteractive
-  when: firmware_efi.stat.exists
+  when: noeud_firmware_efi.stat.exists
 
 - name: Installer le noyau Proxmox
   ansible.builtin.apt:
@@ -200,9 +200,9 @@
 
 - name: Vérifier que la machine tourne bien sur un noyau Proxmox
   ansible.builtin.command: uname -r
-  register: noyau
+  register: noeud_noyau
   changed_when: false
-  failed_when: "'-pve' not in noyau.stdout"
+  failed_when: "'-pve' not in noeud_noyau.stdout"
 
 - name: Installer Proxmox VE et ses compagnons
   ansible.builtin.apt:
@@ -257,13 +257,13 @@
 # On ecrit donc la configuration ifupdown COMPLETE, puis on bascule au
 # redemarrage : changer de gestionnaire de reseau a chaud coupe la session
 # par laquelle on travaille.
-- name: Relever l'interface physique à mettre dans le pont
+- name: Relever l'interface physique à mettre dans le noeud_pont
   ansible.builtin.shell:
     cmd: |
       set -o pipefail
       ip -4 -brief addr show scope global | awk 'NR==1 {print $1}'
     executable: /bin/bash
-  register: interface_physique
+  register: noeud_interface_physique
   changed_when: false
 
 - name: Relever la passerelle courante
@@ -272,7 +272,7 @@
       set -o pipefail
       ip -4 route show default | awk 'NR==1 {print $3}'
     executable: /bin/bash
-  register: passerelle
+  register: noeud_passerelle
   changed_when: false
 
 - name: Écrire la configuration ifupdown complète, pont compris
@@ -288,16 +288,16 @@
       auto lo
       iface lo inet loopback
 
-      iface {{ interface_physique.stdout | trim }} inet manual
+      iface {{ noeud_interface_physique.stdout | trim }} inet manual
 
       auto vmbr0
       iface vmbr0 inet static
-          address {{ adresse.stdout | trim }}/24
-          gateway {{ passerelle.stdout | trim }}
-          bridge-ports {{ interface_physique.stdout | trim }}
+          address {{ noeud_adresse.stdout | trim }}/24
+          gateway {{ noeud_passerelle.stdout | trim }}
+          bridge-ports {{ noeud_interface_physique.stdout | trim }}
           bridge-stp off
           bridge-fd 0
-  when: interface_physique.stdout | trim != 'vmbr0'
+  when: noeud_interface_physique.stdout | trim != 'vmbr0'
 
 - name: Retirer la déclaration de pont devenue redondante
   ansible.builtin.file:
@@ -335,7 +335,7 @@
 - name: Vérifier quel outil gère réellement les interfaces
   ansible.builtin.stat:
     path: /sbin/ifreload
-  register: ifupdown2
+  register: noeud_ifupdown2
 
 - name: Créer le répertoire du verrou d'ifupdown2, absent des images cloud
   # Sur l image cloud du banc, releve le 2026-10-28, /run/network etait
@@ -348,9 +348,9 @@
     path: /run/network
     state: directory
     mode: "0755"
-  when: ifupdown2.stat.exists
+  when: noeud_ifupdown2.stat.exists
 
-- name: Appliquer la configuration à chaud avec ifupdown2
+- name: Appliquer la configuration à chaud avec noeud_ifupdown2
   # `ifreload -a` relit tout le fichier et n applique que les ecarts, sans
   # couper les interfaces inchangees.
   #
@@ -366,39 +366,39 @@
   # Les tentatives sont conservees pour le cas ou un verrou legitime
   # serait tenu, mais ce n est plus elles qui corrigent le defaut.
   ansible.builtin.command: ifreload -a
-  register: rechargement
-  changed_when: rechargement.rc == 0
-  failed_when: rechargement.rc not in [0, 89]
-  until: rechargement.rc == 0
+  register: noeud_rechargement
+  changed_when: noeud_rechargement.rc == 0
+  failed_when: noeud_rechargement.rc not in [0, 89]
+  until: noeud_rechargement.rc == 0
   retries: 12
   delay: 10
-  when: ifupdown2.stat.exists
+  when: noeud_ifupdown2.stat.exists
 
 - name: Monter le pont avec ifupdown, si ifupdown2 n'est pas là
   ansible.builtin.command: ifup vmbr0
-  register: montage_simple
+  register: noeud_montage_simple
   changed_when: true
   failed_when: false
-  when: not ifupdown2.stat.exists
+  when: not noeud_ifupdown2.stat.exists
 
-- name: Laisser au pont le temps de prendre son adresse
+- name: Laisser au pont le temps de prendre son noeud_adresse
   ansible.builtin.wait_for:
     timeout: 10
   delegate_to: localhost
   become: false
 
-- name: Vérifier que le pont porte bien l'adresse
+- name: Vérifier que le pont porte bien l'noeud_adresse
   ansible.builtin.shell:
     cmd: ip -brief a show vmbr0
     executable: /bin/bash
-  register: pont
+  register: noeud_pont
   changed_when: false
   # `is not search(...)` n est PAS du Jinja valide, et le prefixe r'...' de
   # Python n existe pas non plus : l expression levait
   #     Syntax error in expression: expected token ',', got 'string'
   # et la tache echouait alors que le pont portait bien son adresse. Un
   # controle qui plante ne mesure rien. Mesure le 2026-10-28.
-  failed_when: not (pont.stdout | regex_search('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/'))
+  failed_when: not (noeud_pont.stdout | regex_search('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/'))
 
 # LE CERTIFICAT. pveproxy peut tres bien ECOUTER sur 8006 pendant que ses
 # workers meurent en boucle, faute de /etc/pve/local/pve-ssl.pem :
@@ -436,7 +436,7 @@
       # nss-myhostname rend l IPv6 link-local et le certificat du noeud
       # devient impossible a generer.
       127.0.0.1 localhost
-      {{ adresse.stdout | trim }} {{ nom_court.stdout | trim }}.lab {{ nom_court.stdout | trim }}
+      {{ noeud_adresse.stdout | trim }} {{ noeud_nom_court.stdout | trim }}.lab {{ noeud_nom_court.stdout | trim }}
 
       ::1 localhost ip6-localhost ip6-loopback
       ff02::1 ip6-allnodes
@@ -448,12 +448,12 @@
 # Le critere n est pas « une IPv4 existe », c est « AUCUNE link-local ne
 # sort », puisque c est elle qui casse la generation du certificat.
 - name: Vérifier que le nom du nœud ne résout plus vers une link-local
-  ansible.builtin.command: getent ahosts {{ nom_court.stdout | trim }}
-  register: resolution_noeud
+  ansible.builtin.command: getent ahosts {{ noeud_nom_court.stdout | trim }}
+  register: noeud_resolution_noeud
   changed_when: false
   failed_when: >-
-    resolution_noeud.stdout is search('fe80:')
-    or not (resolution_noeud.stdout | regex_search('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'))
+    noeud_resolution_noeud.stdout is search('fe80:')
+    or not (noeud_resolution_noeud.stdout | regex_search('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'))
 
 - name: Régénérer les certificats du nœud
   ansible.builtin.command: pvecm updatecerts --force
@@ -471,5 +471,5 @@
     status_code: 200
   retries: 5
   delay: 5
-  register: interface_web
-  until: interface_web is succeeded
+  register: noeud_interface_web
+  until: noeud_interface_web is succeeded

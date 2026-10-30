@@ -1,0 +1,10 @@
+# Surcharge française du lab pve-creer-lxc. Elle ne porte QUE `title` et
+# `description` : tout autre champ y est ignoré en silence, parce que le
+# contrat ne se traduit pas.
+title: "Créer un conteneur LXC non privilégié aux ressources bornées"
+description: |
+  Créer le conteneur 170 depuis le modèle Debian 13 vérifié, non privilégié,
+  avec un cœur, 512 Mo de RAM et sans swap, y faire tourner un service sous un
+  utilisateur système dédié, et prouver depuis le nœud que l'isolation et les
+  limites s'appliquent réellement, et que données et service survivent à un
+  redémarrage.

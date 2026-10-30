@@ -1,0 +1,10 @@
+# Surcharge française du lab pve-raccorder-instance. Elle ne porte QUE `title`
+# et `description` : tout autre champ y est ignoré en silence, parce que le
+# contrat ne se traduit pas.
+title: "Raccorder une VM au réseau et corriger la panne au bon étage"
+description: |
+  Une VM témoin tourne et son service écoute, mais aucun client ne la joint :
+  sa carte est branchée sur un pont isolé. Trouver la cause depuis le nœud,
+  rebrancher la carte de cette VM sur vmbr0 sans recréer la VM ni toucher au
+  pont isolé, et prouver que la correction survit à un redémarrage de
+  l'invité et à un rechargement du réseau du nœud.
