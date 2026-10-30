@@ -1,8 +1,20 @@
 {
-  "genere_le": "2026-10-30 20:58:07",
+  "genere_le": "2026-10-30 21:50:12",
   "act": "act version 0.2.84",
   "dsoxlab": "dsoxlab 0.5.5",
   "labs": {
+    "pve-creer-lxc": {
+      "id": "pve-creer-lxc",
+      "chemin": "pve-creer-lxc",
+      "verdict": "VALIDE",
+      "score_avant": 0,
+      "score_apres": 100,
+      "tests": "4/4",
+      "duree_s": 380.6,
+      "traces": [],
+      "pourquoi": "",
+      "date": "2026-10-30"
+    },
     "pve-creer-vm": {
       "id": "pve-creer-vm",
       "chemin": "pve-creer-vm",
@@ -23,6 +35,30 @@
       "score_apres": 100,
       "tests": "4/4",
       "duree_s": 501.0,
+      "traces": [],
+      "pourquoi": "",
+      "date": "2026-10-30"
+    },
+    "pve-reparer-agent": {
+      "id": "pve-reparer-agent",
+      "chemin": "pve-reparer-agent",
+      "verdict": "VALIDE",
+      "score_avant": 0,
+      "score_apres": 100,
+      "tests": "3/3",
+      "duree_s": 429.6,
+      "traces": [],
+      "pourquoi": "",
+      "date": "2026-10-30"
+    },
+    "pve-suivre-tache": {
+      "id": "pve-suivre-tache",
+      "chemin": "pve-suivre-tache",
+      "verdict": "VALIDE",
+      "score_avant": 0,
+      "score_apres": 100,
+      "tests": "4/4",
+      "duree_s": 423.8,
       "traces": [],
       "pourquoi": "",
       "date": "2026-10-30"
