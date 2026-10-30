@@ -1,8 +1,20 @@
 {
-  "genere_le": "2026-10-30 19:20:54",
+  "genere_le": "2026-10-30 20:21:34",
   "act": "act version 0.2.84",
   "dsoxlab": "dsoxlab 0.5.5",
   "labs": {
+    "pve-creer-vm": {
+      "id": "pve-creer-vm",
+      "chemin": "pve-creer-vm",
+      "verdict": "VALIDE",
+      "score_avant": 0,
+      "score_apres": 100,
+      "tests": "4/4",
+      "duree_s": 599.4,
+      "traces": [],
+      "pourquoi": "",
+      "date": "2026-10-30"
+    },
     "verifier-son-installation": {
       "id": "verifier-son-installation",
       "chemin": "verifier-son-installation",
