@@ -75,6 +75,7 @@ sections:
     labs:
       - verifier-son-installation
       - pve-raccorder-instance
+      - pve-suivre-tache
       - pve-creer-vm
       - pve-creer-lxc
       - pve-reparer-agent

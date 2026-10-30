@@ -1,0 +1,10 @@
+# Surcharge française du lab pve-suivre-tache. Elle ne porte QUE `title` et
+# `description` : tout autre champ y est ignoré en silence, parce que le
+# contrat ne se traduit pas.
+title: "Lire les tâches de Proxmox : rattacher chaque résultat à sa tâche"
+description: |
+  Trois VM ont été démarrées et arrêtées sur le nœud, dont une sur un disque
+  qui n'existe plus. Lire le journal des tâches par l'interface et par l'API,
+  rapporter chaque tâche de démarrage par son UPID avec son résultat final et
+  sa cause, donner l'état actuel de la VM sentinelle plutôt que son vieux
+  journal, puis retirer les VM temporaires sans toucher à la sentinelle.

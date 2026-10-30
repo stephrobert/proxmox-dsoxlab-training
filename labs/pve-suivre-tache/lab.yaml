@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+#
+# Lire les tâches de Proxmox : rattacher un résultat à sa tâche, reconnaître un
+# échec et sa cause, distinguer un journal de l'état courant.
+#
+# Contrat : TP `pve-suivre-tache` du parcours Proxmox du site, profil `mono`.
+# Le setup déclenche des tâches témoins et garde leurs UPID ; les tests
+# confrontent le rapport de l'apprenant à ce registre.
+id: pve-suivre-tache
+title: "Read Proxmox tasks: tie each result to its task"
+level: l1
+description: |
+  Three VMs were started and stopped on the node, one of them on a disk that no
+  longer exists. Read the task log through the interface and the API, report
+  each start task by its UPID with its final result and cause, give the
+  current state of the sentinel VM rather than its old log, then remove the
+  temporary VMs without touching the sentinel.
+skills:
+  - proxmox
+  - api
+  - tasks
+  - troubleshooting
+distros:
+  - debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/interface-ui/
+lab_type: lab
+difficulty: beginner
+estimated_time: 20m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Proxmox VE 9 node, with witness tasks already run"
+      label_fr: "Nœud Proxmox VE 9, avec des tâches témoins déjà jouées"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

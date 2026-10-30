@@ -1,0 +1,28 @@
+---
+# Joué par `dsoxlab clean` et `dsoxlab reset` : il retire les trois VM
+# témoins, le rapport, la consigne et le registre, pour qu'un nouveau `run`
+# déclenche des tâches neuves.
+- name: Défaire le lab pve-suivre-tache
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Arrêter puis détruire les VM témoins
+      ansible.builtin.shell:
+        cmd: |
+          set -uo pipefail
+          for v in 190 191 192; do
+            qm status "$v" >/dev/null 2>&1 || continue
+            qm stop "$v" --skiplock 1 || true
+            qm destroy "$v" --purge 1 --destroy-unreferenced-disks 1
+          done
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Retirer le rapport, la consigne et le registre
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /root/rapport-taches.txt
+        - /opt/lab-proxmox/pve-suivre-tache
+        - /var/lib/lab-proxmox/pve-suivre-tache

@@ -1,0 +1,125 @@
+---
+# Joué par `dsoxlab run` : il déclenche les tâches témoins que l'apprenant
+# devra lire et expliquer.
+#
+# L'état initial du contrat (profil `mono`) : un nœud installé, et des tâches
+# témoins déclenchées par la fixture. Trois VM, sans système, juste ce qu'il
+# faut pour produire des tâches :
+#
+#   190  sentinelle   démarrée puis arrêtée : son journal dit « démarrage OK »,
+#                     son état actuel dit « arrêtée » ;
+#   191  temporaire   démarrage réussi ;
+#   192  temporaire   démarrage ÉCHOUÉ : son disque a disparu.
+#
+# Les UPID réels sont gardés dans un registre que les tests confrontent au
+# rapport de l'apprenant.
+- name: Préparer le lab pve-suivre-tache
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-suivre-tache
+    registre: /var/lib/lab-proxmox/pve-suivre-tache
+
+  tasks:
+    - name: Disposer d'un nœud Proxmox VE prêt
+      ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+
+    - name: Ouvrir le stockage local aux disques
+      ansible.builtin.command: >-
+        pvesm set local --content iso,vztmpl,backup,images,rootdir,snippets
+      changed_when: true
+
+    - name: Lire le nom du nœud
+      ansible.builtin.command: hostname --short
+      register: noeud
+      changed_when: false
+
+    - name: Créer les répertoires du lab et du registre
+      ansible.builtin.file:
+        path: "{{ item.chemin }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+      loop:
+        - { chemin: "{{ lab_dir }}", mode: "0755" }
+        - { chemin: "{{ registre }}", mode: "0700" }
+
+    - name: Mesurer si les tâches témoins ont déjà été déclenchées
+      ansible.builtin.stat:
+        path: "{{ registre }}/registre.json"
+      register: deja
+
+    - name: Créer les trois VM témoins, sans système
+      ansible.builtin.command: >-
+        qm create {{ item.vmid }} --name {{ item.nom }} --ostype l26
+        --cores 1 --memory 256 --scsihw virtio-scsi-single
+        --scsi0 local:1,format=qcow2 --net0 virtio,bridge=vmbr0
+      loop:
+        - { vmid: 190, nom: sentinelle }
+        - { vmid: 191, nom: temporaire-a }
+        - { vmid: 192, nom: temporaire-b }
+      when: not deja.stat.exists
+      changed_when: true
+
+    # La panne de la 192 : sa configuration désigne un disque qui n'existe
+    # plus. Son démarrage est ACCEPTÉ par l'API, qui rend un UPID, puis la
+    # tâche s'arrête en erreur. La réponse HTTP seule ne dit donc rien.
+    - name: Faire disparaître le disque de la VM 192
+      ansible.builtin.shell:
+        cmd: rm -f /var/lib/vz/images/192/vm-192-disk-*.qcow2
+      when: not deja.stat.exists
+      changed_when: true
+
+    - name: Déclencher les tâches témoins et relever leurs UPID
+      ansible.builtin.shell:
+        cmd: |
+          set -euo pipefail
+          n={{ noeud.stdout | trim }}
+          attendre() {
+            for _ in $(seq 1 30); do
+              s=$(pvesh get "/nodes/$n/tasks/$1/status" --output-format json | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')
+              [ "$s" = stopped ] && return 0
+              sleep 2
+            done
+            return 1
+          }
+          u190=$(pvesh create "/nodes/$n/qemu/190/status/start")
+          attendre "$u190"
+          stop190=$(pvesh create "/nodes/$n/qemu/190/status/stop")
+          attendre "$stop190"
+          u191=$(pvesh create "/nodes/$n/qemu/191/status/start")
+          attendre "$u191"
+          u192=$(pvesh create "/nodes/$n/qemu/192/status/start" || true)
+          attendre "$u192"
+          sha=$(sha256sum /etc/pve/qemu-server/190.conf | cut -d' ' -f1)
+          printf '{"demarrage-190": "%s", "demarrage-191": "%s", "demarrage-192": "%s", "conf-190": "%s"}\n' \
+            "$u190" "$u191" "$u192" "$sha" > {{ registre }}/registre.json
+          chmod 0600 {{ registre }}/registre.json
+        executable: /bin/bash
+      when: not deja.stat.exists
+      changed_when: true
+
+    - name: Écrire la consigne du lab
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/consigne.md"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Consigne du lab pve-suivre-tache
+
+          Trois VM ont été manipulées sur ce nœud : 190 (sentinelle), 191 et
+          192 (temporaires). Rédigez /root/rapport-taches.txt, sur ce modèle,
+          une ligne par entrée :
+
+              demarrage-191: <UPID de la tâche de démarrage> <résultat>
+              demarrage-192: <UPID de la tâche de démarrage> <résultat>
+              etat-190: <état ACTUEL de la VM 190>
+
+          Le résultat est `OK` pour une tâche réussie, et sinon le message
+          d'erreur final de la tâche, tel que Proxmox l'affiche. L'état est
+          celui que donne `qm status` (running ou stopped).
+
+          Supprimez ensuite les VM temporaires 191 et 192. Ne touchez pas à
+          la sentinelle 190.
