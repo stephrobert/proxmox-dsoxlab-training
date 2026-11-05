@@ -1,0 +1,97 @@
+---
+# Guarded, bounded fixture only. This playbook never installs Proxmox VE.
+- name: Préparer pve-eprouver-ceph
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Vérifier une installation PVE préexistante
+      ansible.builtin.command: pveversion --verbose
+      register: pve_version
+      changed_when: false
+      failed_when: false
+    - name: Bloquer clairement sur Debian nu ou sans PVE
+      ansible.builtin.assert:
+        that: pve_version.rc == 0
+        fail_msg: "BLOCKED: an already-installed Proxmox VE node is required; this lab never installs PVE."
+
+    - name: Vérifier le marqueur d’isolement Ceph
+      ansible.builtin.stat:
+        path: /etc/lab-proxmox/ceph-isolated
+      register: isolement
+    - name: Vérifier la configuration de l’OSD jetable
+      ansible.builtin.stat:
+        path: /etc/lab-proxmox/pve-eprouver-ceph.yml
+      register: config_ceph
+    - name: Lire l’identifiant d’OSD explicitement autorisé
+      ansible.builtin.slurp:
+        src: /etc/lab-proxmox/pve-eprouver-ceph.yml
+      register: ceph_input
+      failed_when: false
+    - name: Lire l’état Ceph existant sans le modifier
+      ansible.builtin.command: ceph status --format json
+      register: ceph_status
+      changed_when: false
+    - name: Bloquer si le cluster n’est pas explicitement isolé et sain
+      ansible.builtin.assert:
+        that:
+          - isolement.stat.exists
+          - config_ceph.stat.exists
+          - ceph_input.content is defined
+          - (ceph_input.content | b64decode | from_yaml).lab_isolated | bool
+          - (ceph_input.content | b64decode | from_yaml).disposable_osd is defined
+          - ceph_status.rc == 0
+          - (ceph_status.stdout | from_json).health.status == 'HEALTH_OK'
+        fail_msg: "BLOCKED: use only an explicitly isolated, healthy Ceph lab with a dedicated disposable OSD."
+    - name: Vérifier la présence de l’OSD dédié
+      ansible.builtin.command: "ceph osd find {{ (ceph_input.content | b64decode | from_yaml).disposable_osd }} --format json"
+      register: designated_osd
+      changed_when: false
+      failed_when: false
+    - name: Bloquer si l’OSD dédié ne répond pas up/in
+      ansible.builtin.assert:
+        that:
+          - designated_osd.rc == 0
+          - (designated_osd.stdout | from_json).osd.up | bool
+          - (designated_osd.stdout | from_json).osd.in | bool
+        fail_msg: "BLOCKED: the specifically designated disposable OSD is not live and in the isolated lab cluster."
+    - name: Vérifier que le pool dédié n’existe pas déjà
+      ansible.builtin.command: ceph osd pool ls
+      register: pools
+      changed_when: false
+    - name: Refuser toute collision de pool
+      ansible.builtin.assert:
+        that: "'n4-lab' not in pools.stdout_lines"
+        fail_msg: "BLOCKED: n4-lab already exists; cleanup will never delete a pre-existing pool."
+    - name: Créer un pool répliqué strictement limité au lab
+      ansible.builtin.command: ceph osd pool create n4-lab 8 8 replicated
+      changed_when: true
+    - name: Définir une règle de durabilité explicite
+      ansible.builtin.command: "ceph osd pool set n4-lab {{ item.key }} {{ item.value }}"
+      loop:
+        - { key: size, value: 3 }
+        - { key: min_size, value: 2 }
+      changed_when: true
+    - name: Activer l’usage RBD sur ce seul pool
+      ansible.builtin.command: ceph osd pool application enable n4-lab rbd
+      changed_when: true
+    - name: Marquer le propriétaire du seul pool dédié
+      ansible.builtin.command: ceph osd pool application set n4-lab rbd dsoxlab_lab pve-eprouver-ceph
+      changed_when: true
+    - name: Créer l’image témoin de 64 Mio du lab
+      ansible.builtin.command: rbd create n4-lab/probe --size 64
+      changed_when: true
+
+    - name: Créer le répertoire dédié
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-eprouver-ceph
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Écrire le manifeste borné
+      ansible.builtin.copy:
+        dest: /opt/lab-proxmox/pve-eprouver-ceph/manifest.json
+        owner: root
+        group: root
+        mode: '0640'
+        content: '{{ {"lab": "pve-eprouver-ceph", "vmids": [0], "template_vmid": 9000} | to_json }}'

@@ -18,10 +18,11 @@ title: "Check your Proxmox VE installation against the specification"
 level: l1
 description: |
   Grade a Proxmox VE 9 installation the learner performed themselves against
-  the published specification: version and base distribution, CPU and memory,
-  the raw second disk the storage labs need, nested virtualization, the vmbr0
-  bridge, and the no-subscription repository. The verdict names each failing
-  item so the installation can be fixed and graded again.
+  the published specification: installed version, each Proxmox service, HTTPS,
+  the server address on vmbr0, the active no-subscription repository and APT
+  index downloads. Debian, node sizing, nested virtualization and the raw
+  second disk are supplied prerequisites, checked during preparation and not
+  graded. Each failed property has its own verdict.
 skills:
   - proxmox
   - installation

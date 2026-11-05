@@ -1,0 +1,5 @@
+title: Filtrer le management et les invités
+description: 'Appliquer une politique de flux minimale entre administration, invités
+  et client non autorisé. Périmètre attribué : VMID 203 et son fichier pare-feu /etc/pve/firewall/203.fw
+  ; aucun uplink physique ni réseau externe n’est attribué. Les tests lisent l’état
+  Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

@@ -1,0 +1,5 @@
+title: Construire et éprouver le cluster
+description: |
+  Former un cluster de trois nœuds compatibles préinstallés. Mesurer depuis
+  un contrôleur extérieur majorité, perte de quorum et retour. Préserver
+  la console de secours et ne jamais modifier les votes attendus.

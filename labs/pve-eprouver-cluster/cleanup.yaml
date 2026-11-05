@@ -1,0 +1,9 @@
+- name: Restore only this exercise and remove its controller evidence
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore armed experiments before removing evidence; preserve instructor resources
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

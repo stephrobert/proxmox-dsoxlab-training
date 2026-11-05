@@ -1,0 +1,10 @@
+{
+  "id": "pve-qualifier-stockage-partage", "guest_ids": [9311],
+  "storage_id": "n3-shared", "required_sources": ["nfs"],
+  "points_a_tester": [
+    {"id": "partage", "attendu": "Les nœuds accèdent aux mêmes données.", "methode": "Écrire un nonce contrôlé depuis un nœud et le relire depuis un autre avec identité de volume vérifiée."},
+    {"id": "permissions", "attendu": "Les accès et contenus sont conformes.", "methode": "Tester l’opération autorisée et une exportation ou un contenu hors périmètre refusés."},
+    {"id": "panne", "attendu": "La perte du stockage est détectée et correctement interprétée.", "methode": "Couper uniquement le serveur de lab et observer I/O et service ; ne pas déclarer HA parce que les nœuds répondent encore."},
+    {"id": "reprise", "attendu": "Le retour du support préserve les données.", "methode": "Restaurer la disponibilité, contrôler les empreintes et vérifier la reprise applicative sans double montage dangereux."}
+  ]
+}

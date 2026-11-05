@@ -1,0 +1,9 @@
+- name: Restore only the bounded replication experiment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore owned firewall and controller actions before deleting evidence
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

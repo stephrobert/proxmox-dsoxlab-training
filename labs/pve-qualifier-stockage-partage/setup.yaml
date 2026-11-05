@@ -1,0 +1,9 @@
+- name: Check shared-storage prerequisites from the independent controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Refuse absent independent NFS source or unallocated resources
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

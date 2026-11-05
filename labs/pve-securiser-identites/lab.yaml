@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-securiser-identites
+title: Secure human and machine identities
+level: l2
+description: 'Establish human and machine access with TLS trust, recovery, and a tested
+  token rotation. Assigned scope: PVE identity automation-n2@pve and privilege-separated
+  token lab-n2; VMID 202 is the only assigned VM ACL scope. Tests inspect native Proxmox
+  state; no Proxmox or cluster provisioning is performed.'
+skills:
+- proxmox
+- operations
+- security
+distros: [debian13]
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: intermediate
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Pre-installed Proxmox VE target; no cluster changes
+    label_fr: Cible Proxmox VE préinstallée ; aucune modification du cluster
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

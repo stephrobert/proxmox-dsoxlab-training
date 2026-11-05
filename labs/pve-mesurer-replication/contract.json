@@ -1,0 +1,10 @@
+{
+  "id": "pve-mesurer-replication", "guest_ids": [9341],
+  "storage_id": "n3-replica", "required_sources": [],
+  "points_a_tester": [
+    {"id": "job", "attendu": "Le job réplique le bon volume vers la bonne cible.", "methode": "Lire tâche, snapshot et identité des volumes des deux côtés ; attendre l’état final."},
+    {"id": "rpo", "attendu": "La perte possible est mesurée sur les données.", "methode": "Comparer séquence d’écritures à la dernière réplication terminée puis vérifier le contenu récupéré source indisponible."},
+    {"id": "retard", "attendu": "Un échec de réplication est détecté.", "methode": "Couper le lien de réplication du lab et vérifier l’alerte, sans remplacer son statut par celui de la VM."},
+    {"id": "reprise", "attendu": "Le retour de la source ne provoque pas de double écriture.", "methode": "Exercer le plan de retour autorisé et contrôler le seul propriétaire actif avant de reprendre les écritures."}
+  ]
+}

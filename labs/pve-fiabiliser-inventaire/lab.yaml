@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-fiabiliser-inventaire
+title: "Build a reliable Ansible inventory"
+level: l3
+description: |
+  Build a dynamic inventory from the live Proxmox API for only the two tagged lab VMs. Use their actual node management addresses, explicit handling for missing agent/IP data, and refresh rather than stale cache. The test invokes the inventory source and compares it with live cluster resources.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://docs.ansible.com/ansible/latest/inventory_guide/intro_dynamic_inventory.html
+lab_type: lab
+difficulty: advanced
+estimated_time: 35m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

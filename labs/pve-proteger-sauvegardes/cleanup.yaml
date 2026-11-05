@@ -1,0 +1,25 @@
+---
+- name: Remove only this lab's manifest directory for pve-proteger-sauvegardes
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-proteger-sauvegardes
+  tasks:
+    - name: Require this lab's exact ownership manifest
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: manifest
+    - name: Refuse cleanup without the ownership marker
+      ansible.builtin.assert:
+        that:
+          - manifest.stat.exists
+        fail_msg: 'Lab manifest is absent; refusing to remove any external PVE resource.'
+    - name: Remove only the scheduled backup job owned by this lab if present
+      ansible.builtin.command: pvesh delete /cluster/backup/n2-protect-208
+      register: job_remove
+      changed_when: job_remove.rc == 0
+      failed_when: false
+    - name: Remove only this lab's manifest directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: absent

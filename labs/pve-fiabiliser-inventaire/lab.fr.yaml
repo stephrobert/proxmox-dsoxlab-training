@@ -1,0 +1,3 @@
+title: "Construire un inventaire Ansible fiable"
+description: |
+  Construisez un inventaire dynamique depuis l’API Proxmox réelle, limité aux deux VM balisées du lab. Utilisez les vraies adresses de gestion des nœuds, traitez explicitement l’absence d’agent/IP et rafraîchissez plutôt que de conserver un cache périmé. Le test invoque la source d’inventaire et la compare aux ressources du cluster.

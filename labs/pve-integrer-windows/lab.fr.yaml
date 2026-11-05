@@ -1,0 +1,3 @@
+title: "Exploiter une VM Windows avec VirtIO"
+description: |
+  Utilisez uniquement une ISO Windows pour laquelle vous disposez d’une licence et d’une autorisation, ainsi que l’ISO officielle des pilotes VirtIO. Installez une version choisie et prise en charge, chargez les pilotes disque/réseau, vérifiez l’agent et le réseau après redémarrage, retirez les médias et restaurez une sauvegarde incluant EFI et TPM.

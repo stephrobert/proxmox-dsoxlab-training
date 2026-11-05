@@ -1,0 +1,42 @@
+---
+- name: Preflight the assigned external state for pve-proteger-sauvegardes
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-proteger-sauvegardes
+  tasks:
+    - name: Require an already-installed Proxmox VE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Require an active assigned PBS storage
+      ansible.builtin.command: pvesm status --storage lab-pbs-n2-208 --output-format json
+      register: pbs
+      changed_when: false
+      failed_when: pbs.rc != 0 or 'active' not in pbs.stdout
+    - name: Require the supplied VM and at least one dated backup
+      ansible.builtin.command: pvesm list lab-pbs-n2-208 --content backup --output-format json
+      register: backups
+      changed_when: false
+      failed_when: backups.rc != 0 or (backups.stdout | from_json | length) < 1
+    - name: Create this lab's evidence directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Write the exact external fixture manifest
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifest.yml"
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          lab: pve-proteger-sauvegardes
+          allocated: PBS storage lab-pbs-n2-208; supplied VM/backups, limited identity, and offline key vault.
+          pve_node_required: true
+          cluster_changes: forbidden
+          physical_network_changes: forbidden
+          external_prerequisite: must be supplied by the approved lab inventory

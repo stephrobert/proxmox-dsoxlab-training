@@ -18,12 +18,24 @@ repo:
     tapées : les tests interrogent le nœud, ses invités et ses services.
 
 sections:
+  - id: concevoir
+    title: "Concevoir et qualifier le premier nœud"
+    description: "Préparer un laboratoire isolé et raccorder un invité au réseau attribué."
   - id: deployer
     title: "Déployer un nœud et ses premières instances"
-    description: "Installer Proxmox VE, depuis l'ISO ou sur une Debian 13, et le vérifier face à un cahier des charges ; créer une VM KVM et un conteneur LXC non privilégié, construire un modèle, restaurer une première instance."
+    description: "Installer Proxmox VE, depuis l'ISO ou sur Debian 13, puis vérifier sa conformité ; créer une VM KVM et un conteneur LXC non privilégié, construire un modèle et restaurer un premier service."
+  - id: securiser
+    title: "Sécuriser les identités et les frontières"
+    description: "Déléguer les droits, sécuriser les identités et filtrer les flux de gestion et des invités."
+  - id: reseaux
+    title: "Exploiter les réseaux des invités"
+    description: "Segmenter les VLAN, router les flux et modifier le réseau de façon réversible."
+  - id: proteger-donnees
+    title: "Sauvegarder et restaurer avec PBS"
+    description: "Intégrer PBS, protéger les clés de sauvegarde et prouver la reprise du service."
   - id: exploiter
-    title: "Sécuriser et exploiter une plateforme"
-    description: "Déléguer les droits sans élargir le périmètre, filtrer les flux, segmenter le réseau, sauvegarder sur Proxmox Backup Server et prouver la restauration, surveiller la capacité, diagnostiquer une instance et maintenir un nœud."
+    title: "Observer, diagnostiquer et maintenir"
+    description: "Observer la capacité, diagnostiquer un invité indisponible et maintenir un nœud."
   - id: cluster
     title: "Exploiter un cluster et sa disponibilité"
     description: "Construire un cluster de trois nœuds, migrer et répliquer les invités, éprouver la haute disponibilité face à une panne imposée de l'extérieur, et reprendre après la perte du site primaire."
@@ -32,4 +44,4 @@ sections:
     description: "Piloter l'API et attendre les résultats réels, provisionner avec Terraform sous des droits mesurés, construire un inventaire Ansible fiable, et livrer une plateforme qu'un contrôleur vierge sait reconstruire."
   - id: options
     title: "Options"
-    description: "Windows avec VirtIO, migration VMware, Ceph, SDN et passthrough PCI. Chaque option est indépendante, et aucune ne bloque un niveau."
+    description: "Windows avec VirtIO, migration VMware, Ceph et SDN. Chaque option est indépendante, et aucune ne bloque un niveau."

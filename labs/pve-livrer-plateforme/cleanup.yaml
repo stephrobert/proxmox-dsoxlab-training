@@ -1,0 +1,23 @@
+---
+# Scoped cleanup: only resources assigned to pve-livrer-plateforme; never remove shared prerequisites.
+- name: Nettoyer pve-livrer-plateforme
+  hosts: lab_target
+  become: true
+  tasks:
+
+    - name: Arrêter et détruire uniquement les VMID réservés à pve-livrer-plateforme
+      ansible.builtin.shell:
+        cmd: |
+          set -uo pipefail
+          for v in 1750 1751; do
+            qm status "$v" >/dev/null 2>&1 || continue
+            qm stop "$v" --timeout 30 >/dev/null 2>&1 || true
+            qm destroy "$v" --purge 1 --destroy-unreferenced-disks 1
+          done
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Retirer les seuls fichiers du lab
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-livrer-plateforme
+        state: absent

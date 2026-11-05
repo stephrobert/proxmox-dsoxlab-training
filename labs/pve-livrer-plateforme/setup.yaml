@@ -1,0 +1,74 @@
+---
+# Guarded, bounded fixture only. This playbook never installs Proxmox VE.
+- name: Préparer pve-livrer-plateforme
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Vérifier une installation PVE préexistante
+      ansible.builtin.command: pveversion --verbose
+      register: pve_version
+      changed_when: false
+      failed_when: false
+    - name: Bloquer clairement sur Debian nu ou sans PVE
+      ansible.builtin.assert:
+        that: pve_version.rc == 0
+        fail_msg: "BLOCKED: an already-installed Proxmox VE node is required; this lab never installs PVE."
+
+    - name: Vérifier le template Debian de service existant
+      ansible.builtin.command: qm config 9000
+      register: template_config
+      changed_when: false
+      failed_when: false
+    - name: Bloquer sans template Debian cloud-init et agent QEMU
+      ansible.builtin.assert:
+        that:
+          - template_config.rc == 0
+          - "'template: 1' in template_config.stdout"
+          - "'name: debian-13-cloud-template' in template_config.stdout"
+          - "'agent: 1' in template_config.stdout"
+        fail_msg: "BLOCKED: provide the approved Debian cloud-init template VMID 9000 with QEMU guest agent; setup never creates or installs a template."
+
+    - name: Refuser tout VMID déjà utilisé
+      ansible.builtin.command: "qm status {{ item }}"
+      loop: [1750, 1751]
+      register: vmid_checks
+      changed_when: false
+      failed_when: false
+    - name: Bloquer en cas de collision de VMID
+      ansible.builtin.assert:
+        that: "vmid_checks.results | selectattr('rc', 'equalto', 0) | list | length == 0"
+        fail_msg: "BLOCKED: a reserved lab VMID is already in use; cleanup never deletes pre-existing VMs."
+    - name: Cloner uniquement la VM de livraison depuis le template vérifié
+      ansible.builtin.command: >-
+        qm clone 9000 1750 --full 1 --name pve-livrer-plateforme-1750
+        --storage local
+      changed_when: true
+    - name: Baliser la VM dédiée
+      ansible.builtin.command: qm set 1750 --tags pve-livrer-plateforme
+      changed_when: true
+
+    - name: Créer le répertoire dédié
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-livrer-plateforme
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Écrire le manifeste borné
+      ansible.builtin.copy:
+        dest: /opt/lab-proxmox/pve-livrer-plateforme/manifest.json
+        owner: root
+        group: root
+        mode: '0640'
+        content: '{{ {"lab": "pve-livrer-plateforme", "vmids": [1750, 1751], "template_vmid": 9000} | to_json }}'
+    - name: Créer le nonce de cette recette une seule fois
+      ansible.builtin.shell:
+        cmd: "od -An -N12 -tx1 /dev/urandom | tr -d ' \\n' > nonce"
+        chdir: /opt/lab-proxmox/pve-livrer-plateforme
+        executable: /bin/bash
+        creates: /opt/lab-proxmox/pve-livrer-plateforme/nonce
+    - name: Enregistrer l’empreinte initiale du template
+      ansible.builtin.shell:
+        cmd: "sha256sum /etc/pve/qemu-server/9000.conf | cut -d' ' -f1 > template.sha256"
+        executable: /bin/bash
+        creates: /opt/lab-proxmox/pve-livrer-plateforme/template.sha256

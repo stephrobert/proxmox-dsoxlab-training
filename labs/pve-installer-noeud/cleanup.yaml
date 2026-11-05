@@ -1,0 +1,28 @@
+---
+- name: Nettoyer uniquement la VM attribuée à pve-installer-noeud
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Lire la configuration de la VM imbriquée attribuée
+      ansible.builtin.command:
+        argv: [qm, config, "190"]
+      register: vm_config
+      changed_when: false
+      failed_when: false
+
+    - name: Vérifier la propriété avant de nettoyer
+      ansible.builtin.assert:
+        that:
+          - vm_config.rc != 0 or 'dsoxlab-lab=pve-installer-noeud' in vm_config.stdout
+        fail_msg: La VMID 190 n'appartient plus au lab ; elle est conservée.
+
+    - name: Détruire uniquement la VM imbriquée attribuée
+      ansible.builtin.command:
+        argv: [qm, destroy, "190", --purge, "1", --destroy-unreferenced-disks, "1"]
+      when: vm_config.rc == 0
+      changed_when: true
+
+    - name: Retirer le manifeste et les preuves locales
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-installer-noeud
+        state: absent

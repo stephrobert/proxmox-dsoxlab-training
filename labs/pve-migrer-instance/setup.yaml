@@ -1,0 +1,9 @@
+- name: Check prepared migration guests from the independent client
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Refuse missing PVE nodes, assigned guests or durable witness service
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

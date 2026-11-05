@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-migrer-vmware
+title: "Migrate a VMware workload with a cutover plan"
+level: l3
+description: |
+  Import an authorized VMware export to the isolated lab network, inventory all imported disks and dependencies, validate the running guest beyond boot, then cut over only after the source is powered off. Verify source state through the VMware API and preserve a rollback point for writes.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://pve.proxmox.com/wiki/Migrate_to_Proxmox_VE
+lab_type: lab
+difficulty: advanced
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

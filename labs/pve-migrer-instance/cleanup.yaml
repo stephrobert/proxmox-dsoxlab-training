@@ -1,0 +1,9 @@
+- name: Restore owned controller actions without deleting migrated guests
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore and remove only controller evidence
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

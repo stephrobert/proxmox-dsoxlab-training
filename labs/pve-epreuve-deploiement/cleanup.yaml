@@ -1,0 +1,51 @@
+---
+- name: Nettoyer uniquement les instances marquées de pve-epreuve-deploiement
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Lire les configurations des VM attribuées
+      ansible.builtin.command:
+        argv: [qm, config, "{{ item }}"]
+      loop: [198, 200]
+      register: vm_configs
+      changed_when: false
+      failed_when: false
+
+    - name: Lire la configuration du CT attribué
+      ansible.builtin.command:
+        argv: [pct, config, "201"]
+      register: ct_config
+      changed_when: false
+      failed_when: false
+
+    - name: Vérifier la propriété de toutes les ressources avant suppression
+      ansible.builtin.assert:
+        that:
+          - item.rc != 0 or 'dsoxlab-lab=pve-epreuve-deploiement' in item.stdout
+        fail_msg: "La ressource {{ item.item }} n'appartient plus au lab ; le nettoyage est arrêté."
+      loop: "{{ vm_configs.results + [ct_config] }}"
+      loop_control:
+        label: "{{ item.item | default('CTID 201') }}"
+
+    - name: Détruire les VM explicitement marquées par ce lab
+      ansible.builtin.command:
+        argv: [qm, destroy, "{{ item.item }}", --purge, "1", --destroy-unreferenced-disks, "1"]
+      loop: "{{ vm_configs.results }}"
+      when: item.rc == 0
+      changed_when: true
+
+    - name: Détruire le CT explicitement marqué par ce lab
+      ansible.builtin.command:
+        argv: [pct, destroy, "201", --purge]
+      when: ct_config.rc == 0
+      changed_when: true
+
+    - name: Retirer le service cloud-init attribué
+      ansible.builtin.file:
+        path: /var/lib/vz/snippets/pve-deployment-witness.yaml
+        state: absent
+
+    - name: Retirer le manifeste et les preuves locales
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-epreuve-deploiement
+        state: absent

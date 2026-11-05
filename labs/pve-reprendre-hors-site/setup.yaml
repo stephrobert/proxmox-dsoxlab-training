@@ -1,0 +1,9 @@
+- name: Require independent secondary PBS, empty recovery host and rescue vault
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Fail explicitly on missing independent catalog sources; never reuse cluster nodes
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

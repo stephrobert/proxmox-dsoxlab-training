@@ -1,0 +1,17 @@
+id: pve-migrer-instance
+title: Migrate a VM and container with measured client impact
+level: l3
+description: Detect incompatible dependencies, migrate through supported VM/CT methods and verify placement, durable data and destination restart.
+skills: [proxmox, migration, qemu, lxc]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/chapter-qm.html
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: true}

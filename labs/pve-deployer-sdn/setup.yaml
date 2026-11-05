@@ -1,0 +1,130 @@
+---
+# Guarded, bounded fixture only. This playbook never installs Proxmox VE.
+- name: Préparer pve-deployer-sdn
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Vérifier une installation PVE préexistante
+      ansible.builtin.command: pveversion --verbose
+      register: pve_version
+      changed_when: false
+      failed_when: false
+    - name: Bloquer clairement sur Debian nu ou sans PVE
+      ansible.builtin.assert:
+        that: pve_version.rc == 0
+        fail_msg: "BLOCKED: an already-installed Proxmox VE node is required; this lab never installs PVE."
+
+    - name: Vérifier le quorum cluster et l’état SDN courant
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - pvecm status
+        - pvecm nodes
+        - pvesh get /cluster/sdn/status --output-format json
+        - pvesh get /cluster/sdn/zones --output-format json
+      register: cluster_checks
+      changed_when: false
+      failed_when: false
+    - name: Bloquer si le cluster/SDN préexistant ne répond pas
+      ansible.builtin.assert:
+        that:
+          - cluster_checks.results | length == 4
+          - cluster_checks.results | map(attribute='rc') | select('equalto', 0) | list | length == 4
+          - "'Quorate: Yes' in cluster_checks.results[0].stdout"
+          - "'Nodes: 3' in cluster_checks.results[0].stdout"
+        fail_msg: "BLOCKED: an existing three-node quorate cluster with the required SDN capability is required; this lab does not provision nodes."
+
+    - name: Charger la topologie SDN explicitement fournie par l’opérateur
+      ansible.builtin.slurp:
+        src: /etc/lab-proxmox/pve-deployer-sdn.json
+      register: sdn_input
+      failed_when: false
+    - name: Vérifier le template invité existant
+      ansible.builtin.command: qm config 9000
+      register: template_config
+      changed_when: false
+      failed_when: false
+    - name: Valider les nœuds, le VNet et le template sans les inventer
+      ansible.builtin.assert:
+        that:
+          - sdn_input.content is defined
+          - (sdn_input.content | b64decode | from_json).lab_id == 'pve-deployer-sdn'
+          - (sdn_input.content | b64decode | from_json).nodes | length >= 2
+          - (sdn_input.content | b64decode | from_json).source_node != (sdn_input.content | b64decode | from_json).target_node
+          - (sdn_input.content | b64decode | from_json).source_node in (sdn_input.content | b64decode | from_json).nodes
+          - (sdn_input.content | b64decode | from_json).target_node in (sdn_input.content | b64decode | from_json).nodes
+          - (sdn_input.content | b64decode | from_json).peer_node in (sdn_input.content | b64decode | from_json).nodes
+          - (sdn_input.content | b64decode | from_json).target_node != (sdn_input.content | b64decode | from_json).peer_node
+          - (sdn_input.content | b64decode | from_json).nodes | length == 3
+          - (sdn_input.content | b64decode | from_json).source_node in cluster_checks.results[1].stdout
+          - (sdn_input.content | b64decode | from_json).target_node in cluster_checks.results[1].stdout
+          - (sdn_input.content | b64decode | from_json).peer_node in cluster_checks.results[1].stdout
+          - (sdn_input.content | b64decode | from_json).zone in (cluster_checks.results[3].stdout | from_json | map(attribute='zone') | list)
+          - (sdn_input.content | b64decode | from_json).zone is defined
+          - (sdn_input.content | b64decode | from_json).tag is defined
+          - (sdn_input.content | b64decode | from_json).mtu is defined
+          - (sdn_input.content | b64decode | from_json).guest_ip is defined
+          - (sdn_input.content | b64decode | from_json).peer_ip is defined
+          - (sdn_input.content | b64decode | from_json).gateway is defined
+          - template_config.rc == 0
+          - "'template: 1' in template_config.stdout"
+          - "'agent: 1' in template_config.stdout"
+          - "'cloudinit' in template_config.stdout"
+        fail_msg: "BLOCKED: provide an approved two-node topology and a Debian cloud-init template with QEMU agent; no cluster or template is created here."
+    - name: Lire les nœuds choisis pour le test de migration
+      ansible.builtin.set_fact:
+        sdn_values: "{{ sdn_input.content | b64decode | from_json }}"
+
+    - name: Refuser tout VMID déjà utilisé
+      ansible.builtin.command: pvesh get /cluster/resources --type vm --output-format json
+      register: vmid_inventory
+      changed_when: false
+    - name: Refuser tout VMID déjà utilisé dans le cluster
+      ansible.builtin.assert:
+        that:
+          - >-
+            (vmid_inventory.stdout | from_json
+            | selectattr('vmid', 'in', [1790, 1791]) | list | length) == 0
+        fail_msg: "BLOCKED: a reserved lab VMID is already in use anywhere in the cluster; cleanup never deletes pre-existing VMs."
+    - name: Refuser un VNet homonyme préexistant
+      ansible.builtin.command: pvesh get /cluster/sdn/vnets --output-format json
+      register: vnet_inventory
+      changed_when: false
+    - name: Bloquer en cas de collision de VNet
+      ansible.builtin.assert:
+        that:
+          - "'n4-lab' not in (vnet_inventory.stdout | from_json | map(attribute='vnet') | list)"
+        fail_msg: "BLOCKED: the lab VNet name already exists; cleanup never deletes a pre-existing VNet."
+    - name: Créer le répertoire dédié
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-deployer-sdn
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Écrire le manifeste borné avant la création des invités
+      ansible.builtin.copy:
+        dest: /opt/lab-proxmox/pve-deployer-sdn/manifest.json
+        owner: root
+        group: root
+        mode: '0640'
+        content: '{{ {"lab": "pve-deployer-sdn", "vmids": [1790, 1791], "vnet": "n4-lab", "template_vmid": 9000} | to_json }}'
+    - name: Cloner les deux invités témoins sur les nœuds déclarés
+      ansible.builtin.command: >-
+        qm clone 9000 {{ item.vmid }} --full 1 --name pve-deployer-sdn-{{ item.vmid }}
+        --target {{ item.node }} --storage local
+      loop:
+        - { vmid: 1790, node: "{{ sdn_values.source_node }}" }
+        - { vmid: 1791, node: "{{ sdn_values.peer_node }}" }
+      changed_when: true
+    - name: Baliser uniquement les deux invités témoins
+      ansible.builtin.command: "qm set {{ item }} --tags pve-deployer-sdn"
+      loop: [1790, 1791]
+      changed_when: true
+    - name: Déclarer les adresses réservées sans activer le réseau
+      ansible.builtin.command: >-
+        qm set {{ item.vmid }}
+        --ipconfig0 ip={{ item.address }}/24,gw={{ sdn_values.gateway }}
+      loop:
+        - { vmid: 1790, address: "{{ sdn_values.guest_ip }}" }
+        - { vmid: 1791, address: "{{ sdn_values.peer_ip }}" }
+      changed_when: true

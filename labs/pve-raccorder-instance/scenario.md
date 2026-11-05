@@ -18,16 +18,21 @@ session's witness page: recreating the VM would not bring it back.
    bridge.
 3. Check from the node that the witness page answers.
 
-## What is graded
+## Graded requirements
 
-| # | What is checked | How |
-|---|---|---|
-| 1 | The topology | `net0` carries `bridge=vmbr0`, and `tap160i0` is an actual port of `vmbr0` |
-| 2 | The right instance | the page read from the node contains the session nonce |
-| 3 | The right layer | the VM is reachable, and the isolated bridge received no physical port |
-| 4 | Persistence | after a guest reboot and an `ifreload -a` on the node, the page comes back |
+1. Attach VM 160 net0 to exactly vmbr0.
+2. Make the exact interface tap160i0 an effective port of vmbr0.
+3. Serve the exact session witness line at the address and port given by the manifest, reachable from the node.
+4. Keep physical interfaces out of isolated bridge vmbr9.
+5. Preserve VM 160 SMBIOS identity and create no new VM 160 creation task.
+6. Preserve reachability through a clean stop and start of VM 160.
+7. Preserve reachability after the evaluator successfully reloads the node network.
+
+Persistence checks perform a clean stop and start and observe both states. Unreadable measurements fail. Preservation checks only count once the report exists, the network is repaired or the agent answers, depending on the lab.
 
 ## Starting over
 
 `dsoxlab clean pve-raccorder-instance` destroys VM 160 and removes the
 isolated bridge. The node stays in place.
+
+To check page origin, the evaluator temporarily disables the guest virtual interface, observes that the service becomes unreachable, then restores the interface. It does not change the node management interface.

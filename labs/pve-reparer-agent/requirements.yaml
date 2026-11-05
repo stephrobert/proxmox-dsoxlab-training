@@ -1,0 +1,31 @@
+requirements:
+- id: '1'
+  test: test_le_ping_de_l_agent_repond
+  arguments: []
+  en: Restore a successful guest agent ping.
+  fr: Rétablissez un ping réussi de l’agent invité.
+- id: '2'
+  test: test_le_peripherique_agent_est_active
+  arguments: []
+  en: Enable the guest agent device in VM 180 configuration.
+  fr: Activez le périphérique de l’agent invité dans la configuration de la VM 180.
+- id: '3'
+  test: test_le_canal_est_present
+  arguments: []
+  en: Provide /dev/virtio-ports/org.qemu.guest_agent.0 inside VM 180.
+  fr: Rendez présent /dev/virtio-ports/org.qemu.guest_agent.0 dans la VM 180.
+- id: '4'
+  test: test_l_adresse_remontee_est_celle_du_lab
+  arguments: []
+  en: Have the agent report 10.10.113.180 outside the loopback interface.
+  fr: Faites remonter 10.10.113.180 par l’agent, hors de l’interface de boucle locale.
+- id: '5'
+  test: test_aucun_arret_force_n_a_eu_lieu
+  arguments: []
+  en: Avoid any qmstop task for VM 180 since the lab started.
+  fr: Évitez toute tâche qmstop sur la VM 180 depuis le début du lab.
+- id: '6'
+  test: test_la_charge_temoin_est_preservee
+  arguments: []
+  en: Keep the VM 180 witness page accessible with its exact session line.
+  fr: Conservez la page témoin de la VM 180 accessible avec sa ligne de session exacte.

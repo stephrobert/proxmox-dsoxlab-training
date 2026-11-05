@@ -17,15 +17,20 @@ VM et la façon d'y entrer.
    charge doit se fermer correctement, comme sur un vrai serveur.
 3. Vérifiez depuis le nœud que l'agent répond et remonte l'adresse de la VM.
 
-## Ce qui est noté
+## Exigences notées
 
-| # | Ce qui est vérifié | Comment |
-|---|---|---|
-| 1 | L'agent | périphérique activé, `qm agent 180 ping` répond, canal présent dans l'invité |
-| 2 | L'adresse | l'agent remonte `10.10.113.180`, en ignorant la boucle locale |
-| 3 | L'intégrité de la charge | aucune tâche `qmstop` (arrêt forcé) depuis le début du lab, et la page témoin répond avec les données de la session |
+1. Rétablissez un ping réussi de l’agent invité.
+2. Activez le périphérique de l’agent invité dans la configuration de la VM 180.
+3. Rendez présent /dev/virtio-ports/org.qemu.guest_agent.0 dans la VM 180.
+4. Faites remonter 10.10.113.180 par l’agent, hors de l’interface de boucle locale.
+5. Évitez toute tâche qmstop sur la VM 180 depuis le début du lab.
+6. Conservez la page témoin de la VM 180 accessible avec sa ligne de session exacte.
+
+Les contrôles de persistance effectuent un arrêt propre puis un démarrage et constatent les deux états. Les lectures impossibles refusent la mesure. Les contrôles de préservation ne sont comptés qu’une fois le rapport présent, le réseau rétabli ou l’agent joignable, selon le lab.
 
 ## Recommencer
 
 `dsoxlab clean pve-reparer-agent` détruit la VM 180. Un nouveau `run` tire une
 nouvelle panne, peut-être l'autre.
+
+Pour vérifier l’origine de la page, l’évaluateur désactive temporairement l’interface virtuelle de l’invité, constate que le service devient inaccessible, puis restaure l’interface. Il ne modifie pas l’interface de gestion du nœud.

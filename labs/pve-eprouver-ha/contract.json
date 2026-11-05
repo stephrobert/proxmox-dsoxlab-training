@@ -1,0 +1,10 @@
+{
+  "id": "pve-eprouver-ha", "guest_ids": [9351],
+  "storage_id": "n3-ha", "required_sources": [],
+  "points_a_tester": [
+    {"id": "panne-reelle", "attendu": "Le scénario retire réellement le nœud porteur.", "methode": "Déclencher coupure d’alimentation virtuelle ou partition via le contrôleur externe ; ne pas appeler migration à la place."},
+    {"id": "unicite", "attendu": "Un seul propriétaire du disque et de la charge reste actif.", "methode": "Corréler fencing, processus QEMU et observations multi-nœuds ; rejeter tout double writer."},
+    {"id": "service", "attendu": "Le service retrouve un état métier valide.", "methode": "Mesurer la fenêtre d’indisponibilité depuis le client et vérifier la cohérence des données après reprise."},
+    {"id": "negatif", "attendu": "Un cluster sans quorum ne contourne pas les garanties.", "methode": "Exercer une partition sans majorité et contrôler refus, absence de votes forcés et conservation des données."}
+  ]
+}

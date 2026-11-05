@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-livrer-plateforme
+title: "Deliver a reproducible, transferable platform"
+level: l3
+description: |
+  Use a pre-existing, approved Debian cloud-init template to create the lab VM, configure a nonce-backed HTTP service, and run a second provisioning pass. Create and restore a Proxmox backup to a second lab VM, verify the same service, and clean only resources tagged for this lab.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://pve.proxmox.com/pve-docs/
+lab_type: lab
+difficulty: advanced
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

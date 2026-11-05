@@ -18,6 +18,12 @@ repos:
       - id: end-of-file-fixer
         exclude: '^LICENSE$'
       - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
+      - id: check-case-conflict
+      - id: check-added-large-files
+      - id: mixed-line-ending
       - id: check-merge-conflict
       - id: detect-private-key
 
@@ -151,3 +157,146 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # Les contrôles communs de Containers sont portés et câblés ci-dessous.
+      # Les adaptations et les dettes qui restent bloquantes sont mesurées
+      # dans CONTROLS.fr.md. Les contrôles Proxmox existants sont conservés.
+      - id: assertions-non-nues
+        name: aucune assertion ne refuse sans dire pourquoi
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_assertions_non_nues.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: assertions-bilingues
+        name: les messages lus par l'apprenant existent en anglais et en français
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_assertions_bilingues.py tests/test_messages_controleur.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: six-labs-anti-triche
+        name: les six labs apparient chaque consigne et refusent les dégradations
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_six_labs_anti_triche.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: liens-internes
+        name: les liens relatifs des Markdown pointent un fichier existant
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_liens_internes.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: langue-officielle
+        name: un lab écrit ne se déclare pas non écrit
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_langue_officielle.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: meta-declare-les-labs
+        name: le parcours et les fichiers décrivent les mêmes labs
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_meta_declare_les_labs.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: indices
+        name: quatre indices bilingues rédigés et de coût croissant
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_hints_ecrits.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: style-apprenant
+        name: les textes apprenants respectent la typographie du catalogue
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_style_apprenant.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: images-epinglees
+        name: les images de registre des playbooks sont épinglées
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_images_epinglees.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: exigence-critique-declaree
+        name: une exigence non compensable est déclarée
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_exigence_critique_declaree.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: solutions-chiffrees
+        name: les solutions sont chiffrées et leur clé reste hors de Git
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_solutions_chiffrees.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: maturite-des-labs
+        name: les labs écrits ont une solution et le validateur sait refuser
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_maturite_des_labs.py tests/test_validateur_catalogue.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: aucun-jeton-versionne
+        name: aucun secret reconnaissable dans les fichiers suivis
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_aucun_jeton_versionne.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: briefs-pointent-juste
+        name: les énoncés désignent des hôtes et des chemins existants
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_briefs_pointent_juste.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: outillage-coherent
+        name: chaque test et chaque hook est câblé correctement
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_outillage_coherent.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ancres-trois-issues
+        name: le contrôle des ancres distingue ses trois issues
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_ancres_trois_issues.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: garde-fous-portes-eprouves
+        name: les garde-fous portés savent accepter et refuser
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_garde_fous_portes.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: hadolint
+        name: hadolint sur les Dockerfile du catalogue, hors fixtures
+        entry: python3 scripts/hooks/hadolint_cible.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: trufflehog
+        name: trufflehog (secrets validés, version installée par la CI)
+        entry: trufflehog git file://. --since-commit HEAD --results=verified --fail --no-update
+        language: system
+        pass_filenames: false
+
+      # Réseau : le contrôle des ancres se joue au push, pas au commit.
+      - id: ancres-des-doc-url
+        name: chaque doc_url ancré pointe une section publiée
+        entry: uv run --no-project --with pyyaml python scripts/verifier-ancres.py --labs
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

@@ -1,0 +1,5 @@
+title: Sécuriser les identités, jetons et connexions
+description: 'Mettre en place les accès humains et machine avec confiance TLS, secours
+  et rotation de token testés. Périmètre attribué : Identité PVE automation-n2@pve
+  et jeton à privilèges séparés lab-n2 ; VMID 202 comme seul périmètre ACL attribué.
+  Les tests lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

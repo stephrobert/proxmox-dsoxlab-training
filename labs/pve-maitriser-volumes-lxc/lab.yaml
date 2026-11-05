@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-maitriser-volumes-lxc
+title: Manage LXC volume identity and backups
+level: l2
+description: 'Repair access to a container data set and prove restoration of all requested
+  volumes. Assigned scope: Pre-provisioned disposable CTID 384 named lab-n2-volumes;
+  managed volume lab-n2-volumes; bind mount /srv/lab-n2-share. Tests inspect native
+  Proxmox state; no Proxmox or cluster provisioning is performed.'
+skills:
+- proxmox
+- operations
+- security
+distros: [debian13]
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: intermediate
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Pre-installed Proxmox VE target; no cluster changes
+    label_fr: Cible Proxmox VE préinstallée ; aucune modification du cluster
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

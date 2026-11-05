@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-operer-ansible
+title: "Automate operations with Ansible"
+level: l3
+description: |
+  Use the reader identity to demonstrate that a VM power operation is denied, then use an operator identity scoped to the target VM to stop it. Run the same desired-state play a second time. Tests inspect actual VM states and Proxmox task history, not playbook text or a claimed recap.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://docs.ansible.com/ansible/latest/collections/community/proxmox/proxmox_module.html
+lab_type: lab
+difficulty: advanced
+estimated_time: 35m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

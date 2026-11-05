@@ -1,20 +1,17 @@
-# Challenge: plug a VM into the right bridge
+# pve-raccorder-instance
 
-You work on `pve.lab`. The manifest is in
-`/opt/lab-proxmox/pve-raccorder-instance/manifeste.md`.
+Repair the network attachment of the supplied VM 160. Keep its existing VM identity and disk; the session page alone does not establish that identity.
 
-## What is expected
+## Graded requirements
 
-1. The `net0` card of VM 160 is on `vmbr0`, and `tap160i0` is an actual port
-   of that bridge.
-2. `http://10.10.113.160:8080/` serves the session's witness line.
-3. The isolated bridge `vmbr9` received no physical port, and the VM was not
-   recreated.
-4. After a reboot of the VM and an `ifreload -a` on the node, the page comes
-   back.
+1. Attach VM 160 net0 to exactly vmbr0.
+2. Make the exact interface tap160i0 an effective port of vmbr0.
+3. Serve the exact session witness line at the address and port given by the manifest, reachable from the node.
+4. Keep physical interfaces out of isolated bridge vmbr9.
+5. Preserve VM 160 SMBIOS identity and create no new VM 160 creation task.
+6. Preserve reachability through a clean stop and start of VM 160.
+7. Preserve reachability after the evaluator successfully reloads the node network.
 
-## What is proven
+Persistence checks perform a clean stop and start and observe both states. Unreadable measurements fail. Preservation checks only count once the report exists, the network is repaired or the agent answers, depending on the lab.
 
-The tests read the VM configuration and the actual ports of the bridges,
-query the service from the node, then reboot the guest and reload the node
-network before querying it again.
+To check page origin, the evaluator temporarily disables the guest virtual interface, observes that the service becomes unreachable, then restores the interface. It does not change the node management interface.

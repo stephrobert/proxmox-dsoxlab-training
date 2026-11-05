@@ -18,14 +18,19 @@ modèle du rapport attendu.
 4. Écrivez le tout dans `/root/rapport-taches.txt`, puis supprimez les VM 191
    et 192 sans toucher à la 190.
 
-## Ce qui est noté
+## Exigences notées
 
-| # | Ce qui est vérifié | Comment |
-|---|---|---|
-| 1 | La corrélation | chaque UPID du rapport est celui de la bonne tâche de démarrage |
-| 2 | L'échec | le démarrage de la 192 n'est pas noté OK, et sa cause correspond au message final de la tâche |
-| 3 | L'état courant | l'état rapporté pour la 190 est son état actuel, pas celui de son vieux journal |
-| 4 | La propreté | la 191 et la 192 n'existent plus, la 190 existe et sa configuration n'a pas changé |
+1. Rapportez l’UPID exact de la tâche de démarrage de la VM 191.
+2. Rapportez l’UPID exact de la tâche de démarrage de la VM 192.
+3. Rapportez le résultat final complet de la tâche de démarrage de la VM 191, sans modifier son texte.
+4. Rapportez le résultat final complet de la tâche de démarrage de la VM 192, sans modifier son texte.
+5. Rapportez l’état actuel de la VM 190, plutôt que le résultat de son ancien démarrage.
+6. Supprimez la VM temporaire 191.
+7. Supprimez la VM temporaire 192.
+8. Conservez la VM sentinelle 190.
+9. Préservez la configuration initiale de la VM sentinelle 190.
+
+Les contrôles de persistance effectuent un arrêt propre puis un démarrage et constatent les deux états. Les lectures impossibles refusent la mesure. Les contrôles de préservation ne sont comptés qu’une fois le rapport présent, le réseau rétabli ou l’agent joignable, selon le lab.
 
 ## Recommencer
 

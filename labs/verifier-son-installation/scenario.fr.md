@@ -8,19 +8,20 @@ résultat. Le lab ne regarde pas les commandes que vous avez tapées, il mesure
 l'**état de la machine**. Si vous arrivez au bon état par un autre chemin que
 celui du guide, vous avez réussi.
 
-## Ce qui est noté
+## Exigences notées
 
-**Six postes**, et ce sont ceux que vous accomplissez. Le cahier des charges
-complet est sur la machine, dans `/opt/lab-proxmox/cahier-des-charges.md`.
+1. Installez Proxmox VE pour que pveversion annonce pve-manager.
+2. Utilisez Proxmox VE en version 9 ou ultérieure.
+3. Gardez le service pve-cluster actif.
+4. Gardez le service pvedaemon actif.
+5. Gardez le service pveproxy actif.
+6. Servez une réponse HTTP 200 en HTTPS sur le port 8006.
+7. Faites tenir le port 8006 par pveproxy.
+8. Placez sur vmbr0 l’adresse IPv4 du serveur, résolue depuis son nom d’hôte.
+9. Activez une entrée APT complète du dépôt pve-no-subscription.
+10. Téléchargez tous les index APT sans ignorer une erreur de téléchargement d’un dépôt.
 
-| # | Poste | Comment il est vérifié |
-|---|-------|------------------------|
-| 1 | Proxmox VE est installé | `pveversion` répond |
-| 2 | C'est bien une version 9 | le numéro majeur est 9 ou plus |
-| 3 | Les services tournent | `pve-cluster`, `pvedaemon` et `pveproxy` sont actifs |
-| 4 | L'interface web écoute | le port 8006 est tenu par `pveproxy` |
-| 5 | Le pont existe | `vmbr0` est présent et porte l'adresse du serveur |
-| 6 | Les mises à jour sont possibles | le dépôt `pve-no-subscription` est configuré, `apt-get update` passe |
+Les contrôles de persistance effectuent un arrêt propre puis un démarrage et constatent les deux états. Les lectures impossibles refusent la mesure. Les contrôles de préservation ne sont comptés qu’une fois le rapport présent, le réseau rétabli ou l’agent joignable, selon le lab.
 
 ## Ce qui est garanti, et n'est donc pas noté
 

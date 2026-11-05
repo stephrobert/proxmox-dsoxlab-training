@@ -1,0 +1,40 @@
+---
+- name: Remove only the lab's restored recovery VM
+  hosts: lab_target
+  become: true
+  vars:
+    vmid: 209
+    lab_dir: /opt/lab-proxmox/pve-prouver-restauration
+  tasks:
+    - name: Require the lab ownership manifest before cleanup
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: lab_manifest
+    - name: Refuse cleanup without the ownership marker
+      ansible.builtin.assert:
+        that:
+          - lab_manifest.stat.exists
+        fail_msg: 'Lab ownership manifest is absent; refusing to remove any recovery VM.'
+    - name: Read the recovery VM if it was created
+      ansible.builtin.command: qm config {{ vmid }}
+      register: vm_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse to remove a VM not named by this lab
+      ansible.builtin.assert:
+        that:
+          - vm_config.rc != 0 or 'name: n2-restored-209' in vm_config.stdout
+        fail_msg: "VMID 209 is not this lab's named restore target; refusing cleanup."
+    - name: Stop the lab restore if running
+      ansible.builtin.command: qm stop {{ vmid }}
+      when: vm_config.rc == 0
+      changed_when: true
+      failed_when: false
+    - name: Destroy only the named restored VM and its attached disks
+      ansible.builtin.command: qm destroy {{ vmid }} --purge 1
+      when: vm_config.rc == 0
+      changed_when: true
+    - name: Remove this lab's manifest directory only
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: absent

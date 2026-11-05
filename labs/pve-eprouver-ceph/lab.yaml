@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-eprouver-ceph
+title: "Deploy and troubleshoot Ceph storage"
+level: l3
+description: |
+  On a dedicated isolated Ceph lab only, record the initial health and replica contract, observe a controlled loss of the specifically designated lab OSD, verify the RBD volume remains available under the declared degraded policy, then restore that OSD and prove PGs return clean and replication is restored. Do not claim a hardware benchmark.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://pve.proxmox.com/pve-docs/chapter-pveceph.html
+lab_type: lab
+difficulty: advanced
+estimated_time: 45m
+runtime:
+  type: vm
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles:
+        node2: pve02.lab
+        node3: pve03.lab
+      label_en: "Existing on-demand three-node Proxmox cluster; no nodes are provisioned by this lab"
+      label_fr: "Cluster Proxmox à trois nœuds, existant et à la demande ; ce lab ne provisionne aucun nœud"
+  default: proxmox-cluster
+validation:
+  functional: true
+  persistence_after_reboot: false

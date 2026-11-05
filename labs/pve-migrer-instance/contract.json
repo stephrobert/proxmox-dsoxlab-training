@@ -1,0 +1,10 @@
+{
+  "id": "pve-migrer-instance", "guest_ids": [9321, 9322], "ct_id": 9322,
+  "storage_id": "n3-migrate", "required_sources": [],
+  "points_a_tester": [
+    {"id": "prevol", "attendu": "Les dépendances incompatibles sont détectées avant migration.", "methode": "Fournir une variante avec ressource locale manquante ; attendre un refus expliqué, sans démarrage incomplet sur la cible."},
+    {"id": "placement", "attendu": "L’invité s’exécute sur le nœud demandé.", "methode": "Lire placement et processus effectifs ; vérifier qu’aucune seconde instance active ne conserve le même disque."},
+    {"id": "service", "attendu": "Les données et sessions sont évaluées depuis le client.", "methode": "Contrôler empreintes et chronologie des réponses ; publier la durée observée sans imposer zéro interruption."},
+    {"id": "dependances", "attendu": "Le démarrage ultérieur sur la cible fonctionne.", "methode": "Redémarrer l’invité sur la destination afin de détecter un snippet, une ISO ou un disque encore dépendant de la source."}
+  ]
+}

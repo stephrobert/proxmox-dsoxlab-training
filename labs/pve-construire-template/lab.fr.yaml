@@ -1,0 +1,4 @@
+# Surcharge française du manifeste.
+title: Construire des templates et cloner avec cloud-init
+description: >-
+  Produire un template versionné et deux clones distincts utilisables sans configuration manuelle après démarrage.

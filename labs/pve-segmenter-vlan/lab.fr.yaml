@@ -1,0 +1,5 @@
+title: Segmenter et diagnostiquer les VLAN
+description: 'Construire deux segments et appliquer une exception routée explicite
+  sans exposer le management. Périmètre attribué : VMID 205 ; pont isolé vmbr205 et
+  VLAN 285/286 ; aucun uplink physique. Les tests lisent l’état Proxmox natif ; aucun
+  Proxmox ni cluster n’est installé/préparé.'

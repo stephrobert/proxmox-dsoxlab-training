@@ -1,0 +1,17 @@
+id: pve-reserver-capacite
+title: Reserve N-1 capacity and enforce placement
+level: l3
+description: Measure host, guest and storage budgets; separate two loads and defer a candidate that would consume recovery reserve.
+skills: [proxmox, capacity, placement, ha]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: false}

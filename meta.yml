@@ -56,37 +56,102 @@ infra:
       # Un second disque, brut, pour les labs de stockage : LVM-thin, ZFS,
       # ajout et retrait de vdev. Sans lui, impossible d'enseigner un pool.
       extra_disk_gb: 20
+    # Environnement distinct `proxmox-cluster`, provisionné à la demande par
+    # le backend KVM quand un lab cluster démarre. Seul l'apprenant forme le
+    # cluster avec pvecm ; aucune adhésion n'est automatisée ici.
+    - name: pve01.lab
+      distro: debian13
+      role: debian-family
+      ram_mb: 8192
+      vcpu: 4
+      disk_gb: 40
+      extra_disk_gb: 40
+    - name: pve02.lab
+      distro: debian13
+      role: debian-family
+      ram_mb: 8192
+      vcpu: 4
+      disk_gb: 40
+      extra_disk_gb: 40
+    - name: pve03.lab
+      distro: debian13
+      role: debian-family
+      ram_mb: 8192
+      vcpu: 4
+      disk_gb: 40
+      extra_disk_gb: 40
   providers:
     kvm:
       libvirt_uri: "qemu:///system"
       bridge_name: "virbr-pmxt"
 
 sections:
-  # One section per level of the course (src/data/parcours/proxmox.yaml,
-  # projet.programme_cible.niveaux), then the options. A lab enters its list
-  # the day it is written and proved both ways, not before.
+  # Teaching order follows the course modules in src/data/parcours/proxmox.yaml.
+  # Catalogue presence means authored, not executed or attested.
+  - id: concevoir
+    title: "Design and qualify the first lab node"
+    description: |
+      Prepare an isolated lab and connect a guest to its assigned network.
+    labs:
+      - pve-preparer-laboratoire
+      - pve-raccorder-instance
+
   - id: deployer
     title: "Deploy a node and its first instances"
     description: |
       Install Proxmox VE, from the ISO or on top of Debian 13, and check it
       against a written specification; then create a KVM VM and an
-      unprivileged LXC container, build a template, and restore a first
-      instance.
+      unprivileged LXC container, build a template, and restore a first service.
     labs:
+      - pve-installer-noeud
       - verifier-son-installation
-      - pve-raccorder-instance
       - pve-suivre-tache
       - pve-creer-vm
       - pve-creer-lxc
       - pve-reparer-agent
+      - pve-gerer-cycle-vie
+      - pve-construire-template
+      - pve-restaurer-premiere-instance
+      - pve-epreuve-deploiement
+
+  - id: securiser
+    title: "Secure identities and boundaries"
+    description: |
+      Delegate rights, secure identities and filter management and guest flows.
+    labs:
+      - pve-deleguer-acces
+      - pve-securiser-identites
+      - pve-filtrer-flux
+      - pve-maitriser-volumes-lxc
+
+  - id: reseaux
+    title: "Operate guest networks"
+    description: |
+      Segment VLANs, route flows and make reversible network changes.
+    labs:
+      - pve-segmenter-vlan
+      - pve-changer-reseau
+
+  - id: proteger-donnees
+    title: "Back up and restore with PBS"
+    description: |
+      Integrate PBS, protect backup keys and prove service recovery.
+    labs:
+      - pve-integrer-pbs
+      - pve-proteger-sauvegardes
+      - pve-prouver-restauration
 
   - id: exploiter
-    title: "Secure and operate a platform"
+    title: "Observe, diagnose and maintain"
     description: |
-      Delegate access without widening it, filter flows, segment the network,
-      back up to Proxmox Backup Server and prove the restore, watch capacity,
-      diagnose an instance and maintain a node.
-    labs: []
+      Observe capacity, diagnose an unavailable guest and maintain a node.
+    labs:
+      - pve-observer-alerter
+      - pve-diagnostiquer-instance
+      - pve-maintenir-noeud
+      - pve-exploiter-thin-pool
+      - pve-restaurer-redondance-zfs
+      - pve-epreuve-exploitation
 
   - id: cluster
     title: "Run a cluster and keep it available"
@@ -94,7 +159,16 @@ sections:
       Build a three-node cluster, migrate and replicate guests, test high
       availability against a failure imposed from outside, and recover after
       losing the primary site.
-    labs: []
+    labs:
+      - pve-eprouver-cluster
+      - pve-qualifier-stockage-partage
+      - pve-migrer-instance
+      - pve-reserver-capacite
+      - pve-mesurer-replication
+      - pve-eprouver-ha
+      - pve-maintenir-cluster
+      - pve-reprendre-hors-site
+      - pve-epreuve-disponibilite
 
   - id: automatiser
     title: "Automate a reproducible platform"
@@ -102,14 +176,25 @@ sections:
       Drive the API and wait for real results, provision with Terraform under
       measured rights, build a reliable Ansible inventory, and deliver a
       platform that a clean controller can rebuild.
-    labs: []
+    labs:
+      - pve-piloter-api
+      - pve-provisionner-terraform
+      - pve-reconcilier-etat
+      - pve-fiabiliser-inventaire
+      - pve-operer-ansible
+      - pve-livrer-plateforme
+      - pve-epreuve-automatisation
 
   - id: options
     title: "Options"
     description: |
-      Windows with VirtIO, VMware migration, Ceph, SDN and PCI passthrough.
+      Windows with VirtIO, VMware migration, Ceph and SDN.
       Each option is independent, and none of them blocks a level.
-    labs: []
+    labs:
+      - pve-integrer-windows
+      - pve-migrer-vmware
+      - pve-eprouver-ceph
+      - pve-deployer-sdn
 
 # Envoi des preuves vers le compte facultatif du site, par `dsoxlab login` puis
 # `dsoxlab push`. Rien ne part sans ces deux gestes de l'apprenant. Toutes ces

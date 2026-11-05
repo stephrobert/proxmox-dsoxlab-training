@@ -1,0 +1,37 @@
+---
+- name: Preflight the assigned external state for pve-observer-alerter
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-observer-alerter
+  tasks:
+    - name: Require an already-installed Proxmox VE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Require live node time-series data
+      ansible.builtin.command: pvesh get /nodes/$(hostname -s)/rrddata --timeframe hour --output-format json
+      register: metrics
+      changed_when: false
+      failed_when: metrics.rc != 0 or metrics.stdout | from_json | length == 0
+    - name: Create this lab's evidence directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Write the exact external fixture manifest
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifest.yml"
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          lab: pve-observer-alerter
+          allocated: Live PVE node metrics; local receiver and bounded guest load are supplied externally; no guest or receiver is created.
+          pve_node_required: true
+          cluster_changes: forbidden
+          physical_network_changes: forbidden
+          external_prerequisite: must be supplied by the approved lab inventory

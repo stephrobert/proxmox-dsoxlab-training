@@ -1,0 +1,10 @@
+{
+  "id": "pve-reprendre-hors-site", "guest_ids": [9371],
+  "storage_id": "n3-offsite", "required_sources": ["pbs_secondary", "recovery", "vault"],
+  "points_a_tester": [
+    {"id": "copie", "attendu": "La copie distante contient le point de reprise annoncé.", "methode": "Lire les tâches de synchronisation et vérifier le manifeste sur le secondaire, pas seulement sur le primaire."},
+    {"id": "independance", "attendu": "La restauration ne contacte aucune dépendance primaire.", "methode": "Bloquer les réseaux et stockages primaires pendant toute la recette et observer les accès."},
+    {"id": "restauration", "attendu": "Le service et ses données sont récupérés.", "methode": "Restaurer avec les seules clés de secours puis exécuter des transactions de contrôle."},
+    {"id": "mesure", "attendu": "Le bilan RPO/RTO est rattaché à des traces.", "methode": "Comparer horodatages de panne, données retrouvées et disponibilité ; expliciter que la séparation physique reste à qualifier hors nested."}
+  ]
+}

@@ -1,0 +1,5 @@
+title: Gérer les volumes et identités des LXC
+description: 'Corriger un accès aux données d’un CT et prouver la restauration de
+  tous les volumes demandés. Périmètre attribué : CT non privilégié jetable 384 nommé
+  lab-n2-volumes ; volume géré lab-n2-volumes ; bind mount /srv/lab-n2-share. Les
+  tests lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

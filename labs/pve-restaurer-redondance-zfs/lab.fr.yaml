@@ -1,0 +1,5 @@
+title: Exploiter un miroir ZFS et récupérer un disque
+description: 'Maintenir un service sur un miroir de lab dégradé puis retrouver une
+  redondance saine. Périmètre attribué : Miroir ZFS jetable à deux disques labmirror-n2-214
+  et corpus empreinté ; le setup ne crée ni ne dégrade de pool. Les tests lisent l’état
+  Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

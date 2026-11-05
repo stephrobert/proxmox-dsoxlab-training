@@ -1,0 +1,5 @@
+title: Déléguer les droits sans élargir le périmètre
+description: 'Déléguer l’exploitation d’un pool à une équipe et conserver une séparation
+  vérifiable avec le pool voisin. Périmètre attribué : Pools lab-n2-deleguer et lab-n2-voisin
+  ; VM sentinelles 201 et 216 ; comptes equipe-n2@pve, auditeur-n2@pve et secours-n2@pve.
+  Les tests lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

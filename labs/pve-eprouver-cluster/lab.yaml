@@ -1,0 +1,24 @@
+id: pve-eprouver-cluster
+title: Build and exercise a three-node cluster
+level: l3
+description: |
+  Form a three-node cluster on preinstalled compatible nodes. From an
+  independent controller, measure majority, loss of quorum and recovery.
+  Preserve the rescue console and never change expected votes.
+skills: [proxmox, corosync, quorum, failure-testing]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/chapter-pvecm.html
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+      label_en: Three preinstalled PVE nodes; independent local controller
+      label_fr: Trois nœuds PVE préinstallés ; contrôleur local indépendant
+validation:
+  functional: true
+  persistence_after_reboot: false

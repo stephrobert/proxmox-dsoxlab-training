@@ -1,0 +1,56 @@
+requirements:
+- id: '1'
+  test: test_l_upid_designe_la_bonne_tache
+  arguments:
+  - 191
+  en: Report the exact start-task UPID for VM 191.
+  fr: Rapportez l’UPID exact de la tâche de démarrage de la VM 191.
+- id: '2'
+  test: test_l_upid_designe_la_bonne_tache
+  arguments:
+  - 192
+  en: Report the exact start-task UPID for VM 192.
+  fr: Rapportez l’UPID exact de la tâche de démarrage de la VM 192.
+- id: '3'
+  test: test_le_resultat_final_est_exact
+  arguments:
+  - 191
+  en: Report the complete final result of the start task for VM 191, preserving its
+    text.
+  fr: Rapportez le résultat final complet de la tâche de démarrage de la VM 191, sans
+    modifier son texte.
+- id: '4'
+  test: test_le_resultat_final_est_exact
+  arguments:
+  - 192
+  en: Report the complete final result of the start task for VM 192, preserving its
+    text.
+  fr: Rapportez le résultat final complet de la tâche de démarrage de la VM 192, sans
+    modifier son texte.
+- id: '5'
+  test: test_l_etat_rapporte_est_courant
+  arguments: []
+  en: Report the current state of VM 190, rather than its historical start result.
+  fr: Rapportez l’état actuel de la VM 190, plutôt que le résultat de son ancien démarrage.
+- id: '6'
+  test: test_une_vm_temporaire_est_supprimee
+  arguments:
+  - 191
+  en: Delete temporary VM 191.
+  fr: Supprimez la VM temporaire 191.
+- id: '7'
+  test: test_une_vm_temporaire_est_supprimee
+  arguments:
+  - 192
+  en: Delete temporary VM 192.
+  fr: Supprimez la VM temporaire 192.
+- id: '8'
+  test: test_la_sentinelle_existe
+  arguments: []
+  en: Keep sentinel VM 190 present.
+  fr: Conservez la VM sentinelle 190.
+- id: '9'
+  test: test_la_configuration_de_la_sentinelle_est_intacte
+  arguments: []
+  en: Preserve the initial configuration of sentinel VM 190.
+  fr: Préservez la configuration initiale de la VM sentinelle 190.

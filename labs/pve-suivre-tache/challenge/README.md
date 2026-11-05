@@ -1,19 +1,17 @@
-# Challenge: an accurate task report, and a node put back in order
+# pve-suivre-tache
 
-You work on `pve.lab`. The instructions are in
-`/opt/lab-proxmox/pve-suivre-tache/consigne.md`.
+Write /root/rapport-taches.txt with demarrage-191, demarrage-192 and etat-190 keys. The lab supplies the initial tasks and the sentinel.
 
-## What is expected
+## Graded requirements
 
-1. `/root/rapport-taches.txt` gives the exact UPID of the start tasks of VMs
-   191 and 192.
-2. The start of 191 is reported `OK`, the one of 192 carries the final error
-   message of its task.
-3. The state reported for 190 is its current state.
-4. VMs 191 and 192 are deleted, 190 is untouched.
+1. Report the exact start-task UPID for VM 191.
+2. Report the exact start-task UPID for VM 192.
+3. Report the complete final result of the start task for VM 191, preserving its text.
+4. Report the complete final result of the start task for VM 192, preserving its text.
+5. Report the current state of VM 190, rather than its historical start result.
+6. Delete temporary VM 191.
+7. Delete temporary VM 192.
+8. Keep sentinel VM 190 present.
+9. Preserve the initial configuration of sentinel VM 190.
 
-## What is proven
-
-The tests compare the report with the UPID register kept by the lab, read the
-final status of each task through the API, the state of 190 with `qm status`,
-and the fingerprint of its configuration.
+Persistence checks perform a clean stop and start and observe both states. Unreadable measurements fail. Preservation checks only count once the report exists, the network is repaired or the agent answers, depending on the lab.

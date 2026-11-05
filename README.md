@@ -42,13 +42,45 @@ Learners reach the result by whatever path they choose.
   extensions. On Linux, `cat /sys/module/kvm_intel/parameters/nested` (or
   `kvm_amd`) must print `Y`.
 - **6 GB of free RAM and 60 GB of disk** for the single machine, `pve.lab`.
+- **For cluster labs:** a separate 48 GB host, with 24 GB reserved for the
+  three-node environment and at least 280 GB free in the libvirt pool.
 - **Outbound network access**, for the base image and the Proxmox
   repositories.
 
 One virtual machine, `pve.lab` (Debian 13, 4 vCPU, 6 GB, a 40 GB system disk
 and a second raw 20 GB disk), declared in `meta.yml` and created by
-`dsoxlab provision`. Proxmox VE replaces the machine's kernel and takes over
-its network: nothing runs on your own machine.
+`dsoxlab provision --host pve.lab`. Proxmox VE replaces the machine's kernel
+and takes over its network: nothing runs on your own machine.
+
+Cluster labs use a separate `proxmox-cluster` target: `pve01.lab`, `pve02.lab`
+and `pve03.lab`, each with 4 vCPU, 8 GB RAM, a 40 GB system disk and a 40 GB
+extra disk. Starting a cluster lab provisions these three Debian 13 machines
+on demand through the KVM backend. It does **not** create a Proxmox cluster:
+the learner must build it with `pvecm`. To keep the 24 GB host reserve, use the
+single-node and cluster environments one at a time.
+
+Start a cluster lab explicitly with:
+
+```bash
+dsoxlab start pve-eprouver-cluster --target proxmox-cluster
+```
+
+Do not run `dsoxlab provision` without a host filter: it applies the whole
+catalog. Run this read-only capacity preflight, then explicitly select the
+cluster target:
+
+```bash
+uv run python scripts/provision_cluster.py
+dsoxlab start pve-eprouver-cluster --target proxmox-cluster
+```
+
+The preflight requires at least 26 GiB available RAM, 280 GiB free in the
+libvirt pool, 12 logical CPUs and a moderate CPU load. Cluster nodes can then
+start additional guest VMs. Starting the lab provisions the three nodes via
+the KVM backend; it never forms the Proxmox cluster. `--apply` on the script is
+an alternative for manually provisioning those hosts before starting a lab.
+An unfiltered `dsoxlab destroy` destroys the catalog's entire infrastructure,
+not just the cluster.
 
 `dsoxlab doctor` says what this repository needs and what it does not, and
 tells apart a check that failed from one it could not measure.
@@ -75,7 +107,7 @@ dsoxlab doctor
 
 ```bash
 export LAB_HOME=$PWD
-dsoxlab provision                          # creates pve.lab, a bare Debian 13
+dsoxlab provision --host pve.lab            # creates only the base node
 dsoxlab list-labs                          # the catalog, in teaching order
 dsoxlab run       verifier-son-installation
 dsoxlab challenge verifier-son-installation   # the specification to meet
@@ -139,7 +171,7 @@ live inside the machine, not on the learner's host.
 
 | Runtime | What the lab asks for |
 |---|---|
-| `vm` | the `pve.lab` machine, provisioned by `dsoxlab provision`, on Debian 13, with nested virtualization. The learner installs Proxmox VE on it, then creates their guests there. |
+| `vm` | the `pve.lab` machine for ordinary labs, provisioned with an explicit host filter, on Debian 13, with nested virtualization. Cluster labs select the separate `proxmox-cluster` target, whose three nodes are provisioned on demand; the learner creates the cluster. |
 
 ### The validation model
 
@@ -173,8 +205,9 @@ lab of what is missing from the machine.
 
 ## Catalog
 
-Played in order. More labs are added as they are written and proven in both
-directions.
+Played in order. Catalogue presence means a lab has been authored; it is not
+an execution attestation. A lab is proven only after its tests have failed
+before the task and passed after it on the target environment.
 
 <!-- LABS:START -->
 ### Deploy a node and its first instances

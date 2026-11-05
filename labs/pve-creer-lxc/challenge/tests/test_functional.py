@@ -1,161 +1,135 @@
-"""Note le conteneur 170 que l'apprenant a créé et mis en service.
-
-Contrat du TP `pve-creer-lxc` (src/data/parcours/proxmox.yaml du site) : le
-conteneur reste NON privilégié, son service répond depuis un client séparé,
-ses limites s'appliquent réellement, et données comme service survivent à un
-redémarrage. Le nœud joue le client.
-
-Chaque preuve porte sur l'état EFFECTIF. Une ligne `unprivileged: 1` dans la
-configuration ne prouve pas l'isolation : on lit la table de correspondance des
-UID du conteneur. Une limite déclarée ne prouve pas une limite appliquée : on
-lit le cgroup du conteneur.
-"""
-
-from __future__ import annotations
+"""Un verdict par propriété annoncée ; les lectures impossibles refusent."""
 
 import re
 import secrets
-import time
 
 import pytest
 
 from conftest import lab_host, lab_target_host, message
-
-CIBLE = lab_target_host("pve.lab")
-CTID = 170
-ADRESSE = "10.10.113.170"
-PORT = 8080
-NONCE = "/opt/lab-proxmox/pve-creer-lxc/nonce"
-MEMOIRE_OCTETS = 512 * 1024 * 1024
+from shared.proxmox_checks import (
+    cgroup,
+    cleanup,
+    config,
+    cpu_count,
+    options,
+    read,
+    require_equal,
+    require_guest_page,
+    require_page,
+    restart,
+    wait_page,
+    witness,
+)
 
 
 @pytest.fixture(scope="module")
 def pve():
-    return lab_host(CIBLE)
+    return lab_host(lab_target_host("pve.lab"))
 
 
-def _config(hote) -> dict[str, str]:
-    res = hote.run(f"pct config {CTID}")
-    if res.rc != 0:
-        return {}
-    return {
-        cle.strip(): valeur.strip()
-        for cle, _, valeur in (ligne.partition(":") for ligne in res.stdout.splitlines())
-    }
+DIRECTORY = "/opt/lab-proxmox/pve-creer-lxc"
+ADDRESS = "10.10.113.170"
 
 
-def _exiger_ct(hote) -> dict[str, str]:
-    config = _config(hote)
-    assert config, message(
-        en=f"Container {CTID} does not exist. Create it with the CTID given in the lab manifest.",
-        fr=f"Le conteneur {CTID} n'existe pas. Créez-le avec le CTID donné par le manifeste du lab.",
-    )
-    return config
+@pytest.mark.parametrize("key,expected", [
+    ("hostname", "ct-web"), ("unprivileged", "1"), ("memory", "512"),
+    ("swap", "0"), ("cores", "1"),
+])
+def test_une_propriete_du_conteneur(pve, key, expected):
+    require_equal(config(pve, "pct", 170).get(key), expected, key)
 
 
-def _ligne_attendue(hote) -> str:
-    return f"temoin {hote.file(NONCE).content_string.strip()} ctid {CTID}"
-
-
-def _page(hote) -> str:
-    res = hote.run(f"curl -s --max-time 5 http://{ADRESSE}:{PORT}/")
-    return res.stdout if res.rc == 0 else ""
-
-
-def _cgroup(hote, fichier: str) -> str:
-    """Lit un fichier du cgroup du conteneur, quel que soit son niveau."""
-    for chemin in (f"/sys/fs/cgroup/lxc/{CTID}/{fichier}", f"/sys/fs/cgroup/lxc/{CTID}/ns/{fichier}"):
-        res = hote.run(f"cat {chemin}")
-        if res.rc == 0 and res.stdout.strip():
-            return res.stdout.strip()
-    return ""
-
-
-def test_le_conteneur_reste_non_privilegie(pve) -> None:
-    config = _exiger_ct(pve)
-    assert config.get("unprivileged") == "1", message(
-        en="The container is privileged: its root is the host's root. Recreate it unprivileged.",
-        fr="Le conteneur est privilégié : son root est celui de l'hôte. Recréez-le non privilégié.",
-    )
-    etat = pve.run(f"pct status {CTID}").stdout
-    assert "running" in etat, message(
-        en=f"Container {CTID} is not running ({etat.strip()}).",
-        fr=f"Le conteneur {CTID} ne tourne pas ({etat.strip()}).",
-    )
-    # La preuve effective : root (UID 0) du conteneur est projeté sur un UID
-    # non privilégié de l'hôte.
-    table = pve.run(f"pct exec {CTID} -- cat /proc/self/uid_map").stdout.split()
-    assert len(table) >= 2 and table[0] == "0" and int(table[1]) >= 100000, message(
-        en=f"The container UID map does not shift root to an unprivileged host UID: {' '.join(table)}",
-        fr=f"La table d'UID du conteneur ne projette pas root vers un UID non privilégié de l'hôte : {' '.join(table)}",
+def test_le_stockage_est_local(pve):
+    assert config(pve, "pct", 170).get("rootfs", "").startswith("local:"), message(
+        en="Create the container root disk on local.", fr="Créez le disque racine du conteneur sur local.",
     )
 
 
-def test_le_service_repond_depuis_le_client(pve) -> None:
-    _exiger_ct(pve)
-    attendu = _ligne_attendue(pve)
-    page = _page(pve)
-    assert attendu in page, message(
-        en=(
-            f"http://{ADRESSE}:{PORT}/ does not serve the expected line from the node:\n  {attendu}\n"
-            "Check the container address, then that the service listens (ss -tlnp)."
-        ),
-        fr=(
-            f"http://{ADRESSE}:{PORT}/ ne sert pas la ligne attendue depuis le nœud :\n  {attendu}\n"
-            "Vérifiez l'adresse du conteneur, puis que le service écoute (ss -tlnp)."
-        ),
-    )
-    proprietaires = pve.run(f"pct exec {CTID} -- ps -o user= -C python3").stdout.split()
-    assert proprietaires and set(proprietaires) == {"web"}, message(
-        en=f"The service must run as user web, not as {', '.join(proprietaires) or 'nobody'}.",
-        fr=f"Le service doit tourner sous l'utilisateur web, pas sous {', '.join(proprietaires) or 'personne'}.",
+@pytest.mark.parametrize("key,expected", [("bridge", "vmbr0"), ("ip", "10.10.113.170/24"), ("gw", "10.10.113.1")])
+def test_une_propriete_reseau(pve, key, expected):
+    require_equal(options(config(pve, "pct", 170).get("net0", "")).get(key), expected, key)
+
+
+def test_le_dns_est_celui_du_manifeste(pve):
+    require_equal(config(pve, "pct", 170).get("nameserver"), "10.10.113.1", "DNS")
+
+
+def test_le_conteneur_tourne(pve):
+    config(pve, "pct", 170)
+    require_equal(read(pve, "pct status 170"), "status: running", "CT 170")
+
+
+def test_root_est_effectivement_decale(pve):
+    config(pve, "pct", 170)
+    rows = read(pve, "pct exec 170 -- cat /proc/self/uid_map").splitlines()
+    mappings = [list(map(int, row.split())) for row in rows]
+    assert any(len(row) == 3 and row[0] == 0 and row[1] >= 100000 and row[2] > 0 for row in mappings), message(
+        en="Map container root to an unprivileged host UID.", fr="Projetez root du conteneur sur un UID non privilégié de l'hôte.",
     )
 
 
-def test_les_limites_s_appliquent_reellement(pve) -> None:
-    config = _exiger_ct(pve)
-    ecarts = []
-    if config.get("memory") != "512":
-        ecarts.append(f"memory={config.get('memory', '512 (défaut)')} dans la configuration, attendu 512")
-    if config.get("swap", "512") != "0":
-        ecarts.append(f"swap={config.get('swap', '512 (défaut)')}, attendu 0")
-    if config.get("cores") != "1":
-        ecarts.append(f"cores={config.get('cores', 'tous (défaut)')}, attendu 1")
-    memoire = _cgroup(pve, "memory.max")
-    if memoire != str(MEMOIRE_OCTETS):
-        ecarts.append(f"memory.max du cgroup = {memoire or 'illisible'}, attendu {MEMOIRE_OCTETS}")
-    cpus = _cgroup(pve, "cpuset.cpus.effective")
-    nombre = sum(
-        (int(b) - int(a) + 1) if b else 1
-        for a, b in re.findall(r"(\d+)(?:-(\d+))?", cpus)
-    )
-    if nombre != 1:
-        ecarts.append(f"cpuset effectif = {cpus or 'illisible'}, attendu un seul cœur")
-    assert not ecarts, message(
-        en="The limits are not those of the manifest, or are not applied:\n  " + "\n  ".join(ecarts),
-        fr="Les limites ne sont pas celles du manifeste, ou ne s'appliquent pas :\n  " + "\n  ".join(ecarts),
+def test_la_distribution_est_debian_13(pve):
+    config(pve, "pct", 170)
+    output = read(pve, "pct exec 170 -- cat /etc/os-release")
+    values = dict(line.split("=", 1) for line in output.splitlines() if "=" in line)
+    require_equal((values.get("ID", "").strip('"'), values.get("VERSION_ID", "").strip('"')), ("debian", "13"), "distribution")
+
+
+def test_python3_est_installe(pve):
+    config(pve, "pct", 170)
+    read(pve, "pct exec 170 -- python3 --version")
+
+
+def test_web_est_un_compte_systeme(pve):
+    config(pve, "pct", 170)
+    uid = int(read(pve, "pct exec 170 -- id -u web"))
+    limit = read(pve, "pct exec 170 -- cat /etc/login.defs")
+    match = re.search(r"^UID_MIN\s+(\d+)", limit, re.M)
+    assert match and 0 < uid < int(match[1]), message(
+        en="Create web as a non-root system account.", fr="Créez web comme compte système non root.",
     )
 
 
-def test_donnees_et_service_survivent_au_redemarrage(pve) -> None:
-    _exiger_ct(pve)
-    attendu = _ligne_attendue(pve)
-    assert attendu in _page(pve), message(
-        en="The service does not answer before the reboot: fix the previous tests first.",
-        fr="Le service ne répond pas avant le redémarrage : corrigez d'abord les tests précédents.",
-    )
-    marqueur = secrets.token_hex(8)
-    pve.run(f"pct exec {CTID} -- sh -c 'echo {marqueur} > /root/marqueur-lab'")
-    pve.run(f"pct reboot {CTID} --timeout 60")
-    limite = time.monotonic() + 180
-    while time.monotonic() < limite and attendu not in _page(pve):
-        time.sleep(5)
-    relu = pve.run(f"pct exec {CTID} -- cat /root/marqueur-lab").stdout.strip()
-    assert relu == marqueur, message(
-        en="A file written before the reboot is gone: the container root disk does not persist.",
-        fr="Un fichier écrit avant le redémarrage a disparu : le disque racine du conteneur ne persiste pas.",
-    )
-    assert attendu in _page(pve), message(
-        en="After a reboot, the service no longer answers: it is not enabled (systemctl enable).",
-        fr="Après un redémarrage, le service ne répond plus : il n'est pas activé (systemctl enable).",
-    )
+def test_la_page_temoin_repond(pve):
+    config(pve, "pct", 170)
+    require_guest_page(pve, "pct", 170, ADDRESS, witness(pve, DIRECTORY, "ctid", 170))
+
+
+def test_le_processus_qui_ecoute_appartient_a_web(pve):
+    config(pve, "pct", 170)
+    sockets = read(pve, "pct exec 170 -- ss -H -ltnp 'sport = :8080'")
+    pids = sorted(set(re.findall(r"pid=(\d+)", sockets)))
+    assert pids, message(en="Start the HTTP listener on port 8080.", fr="Démarrez le serveur HTTP sur le port 8080.")
+    owners = read(pve, f"pct exec 170 -- ps -o user= -p {','.join(pids)}").split()
+    require_equal(set(owners), {"web"}, "HTTP listener owner")
+
+
+@pytest.mark.parametrize("filename,expected", [("memory.max", str(512 * 1024 * 1024)), ("memory.swap.max", "0")])
+def test_une_limite_memoire_effective(pve, filename, expected):
+    config(pve, "pct", 170)
+    require_equal(cgroup(pve, 170, filename), expected, filename)
+
+
+def test_un_seul_cpu_est_effectif(pve):
+    config(pve, "pct", 170)
+    require_equal(cpu_count(cgroup(pve, 170, "cpuset.cpus.effective")), 1, "effective CPU count")
+
+
+def test_les_donnees_survivent_au_redemarrage(pve):
+    config(pve, "pct", 170)
+    marker = secrets.token_hex(16)
+    filename = f"/root/marqueur-lab-{marker}"
+    try:
+        read(pve, f"pct exec 170 -- sh -c 'printf %s {marker} > {filename}'")
+        restart(pve, "pct", 170)
+        require_equal(read(pve, f"pct exec 170 -- cat {filename}"), marker, "persistent data")
+    finally:
+        cleanup(pve, f"pct exec 170 -- rm -f {filename}")
+
+
+def test_le_service_survit_au_redemarrage(pve):
+    config(pve, "pct", 170)
+    expected = witness(pve, DIRECTORY, "ctid", 170)
+    require_page(pve, ADDRESS, expected)
+    restart(pve, "pct", 170)
+    wait_page(pve, ADDRESS, expected)

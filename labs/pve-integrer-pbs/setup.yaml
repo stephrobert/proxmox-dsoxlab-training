@@ -1,0 +1,40 @@
+---
+- name: Preflight the assigned external state for pve-integrer-pbs
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-integrer-pbs
+  tasks:
+    - name: Require an already-installed Proxmox VE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Require supplied PBS connection metadata without inventing a host role
+      ansible.builtin.assert:
+        that:
+          - pbs_server is defined
+          - pbs_datastore is defined
+          - pbs_username is defined
+          - pbs_fingerprint is defined
+        fail_msg: 'BLOCKED: provide the PBS endpoint, datastore, backup identity and verified fingerprint through the approved lab inventory.'
+    - name: Create this lab's evidence directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Write the exact external fixture manifest
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifest.yml"
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          lab: pve-integrer-pbs
+          allocated: PBS storage lab-pbs-n2-207; externally supplied PBS endpoint/datastore and VM/CT workloads; no PBS host is provisioned by this lab.
+          pve_node_required: true
+          cluster_changes: forbidden
+          physical_network_changes: forbidden
+          external_prerequisite: must be supplied by the approved lab inventory

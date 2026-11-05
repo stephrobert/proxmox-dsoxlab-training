@@ -1,0 +1,40 @@
+---
+- name: Remove only the disposable CT assigned to pve-maitriser-volumes-lxc
+  hosts: lab_target
+  become: true
+  vars:
+    ctid: 384
+    lab_dir: /opt/lab-proxmox/pve-maitriser-volumes-lxc
+  tasks:
+    - name: Require this lab's ownership manifest before cleanup
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: lab_manifest
+    - name: Refuse cleanup without the ownership marker
+      ansible.builtin.assert:
+        that:
+          - lab_manifest.stat.exists
+        fail_msg: 'Lab ownership manifest is absent; refusing to remove the container.'
+    - name: Read the assigned container configuration
+      ansible.builtin.command: pct config {{ ctid }}
+      register: ct_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse to destroy a container not owned by this lab
+      ansible.builtin.assert:
+        that:
+          - ct_config.rc != 0 or 'hostname: lab-n2-volumes' in ct_config.stdout
+        fail_msg: 'CTID 384 no longer matches the lab fixture; refusing cleanup.'
+    - name: Stop the disposable container if running
+      ansible.builtin.command: pct stop {{ ctid }}
+      when: ct_config.rc == 0
+      changed_when: true
+      failed_when: false
+    - name: Destroy only the assigned disposable container
+      ansible.builtin.command: pct destroy {{ ctid }} --purge 1
+      when: ct_config.rc == 0
+      changed_when: true
+    - name: Remove this lab's manifest directory only
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: absent

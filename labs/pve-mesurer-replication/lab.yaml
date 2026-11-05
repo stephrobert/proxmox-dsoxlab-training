@@ -1,0 +1,17 @@
+id: pve-mesurer-replication
+title: Measure ZFS replication and the recoverable data boundary
+level: l3
+description: Verify completed jobs and snapshots, impose a replication-link failure and recover an exact durable sequence with the source fenced.
+skills: [proxmox, zfs, replication, rpo]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/chapter-pvesr.html
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: false}

@@ -1,0 +1,49 @@
+---
+- name: Reserve the exact recovery target without creating a fake guest
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-prouver-restauration
+    vmid: 209
+    storage: lab-pbs-n2-209
+  tasks:
+    - name: Require an already-installed Proxmox VE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Require the externally supplied active PBS datastore
+      ansible.builtin.command: pvesm status --storage {{ storage }} --output-format json
+      register: pbs
+      changed_when: false
+      failed_when: pbs.rc != 0 or 'active' not in pbs.stdout
+    - name: Confirm the assigned restore VMID is unused
+      ansible.builtin.command: qm config {{ vmid }}
+      register: target
+      changed_when: false
+      failed_when: false
+    - name: Refuse to overwrite any existing VM
+      ansible.builtin.assert:
+        that:
+          - target.rc != 0
+        fail_msg: 'BLOCKED: VMID 209 is occupied; select a newly approved empty recovery target rather than overwrite it.'
+    - name: Create the lab evidence directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Record the reserved target and external recovery prerequisites
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifest.yml"
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          lab: pve-prouver-restauration
+          allocated: empty restore VMID 209 named n2-restored-209; PBS storage lab-pbs-n2-209; isolated recovery network
+          pve_node_required: true
+          cluster_changes: forbidden
+          physical_network_changes: forbidden
+          external_prerequisite: evaluator-owned backup, write journal, PBS and recovery network

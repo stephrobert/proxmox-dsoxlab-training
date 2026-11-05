@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-reconcilier-etat
+title: "Manage state, drift and destructive changes"
+level: l3
+description: |
+  Import the existing lab VM without recreating it, capture a plan after a controlled live configuration drift, then correct the declared configuration. Keep a saved safe plan that does not destroy or replace the VM, and show that the final state converges to the real VM.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://registry.terraform.io/providers/bpg/proxmox/latest/docs
+lab_type: lab
+difficulty: advanced
+estimated_time: 45m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

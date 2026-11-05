@@ -1,0 +1,49 @@
+---
+- name: Prepare bounded fixture for pve-maitriser-volumes-lxc
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-maitriser-volumes-lxc
+    ctid: 384
+  tasks:
+    - name: Require an already-installed Proxmox VE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Read the explicitly assigned disposable container
+      ansible.builtin.command: pct config {{ ctid }}
+      register: ct_config
+      changed_when: false
+      failed_when: false
+    - name: Require the pre-provisioned lab-only unprivileged container
+      ansible.builtin.assert:
+        that:
+          - ct_config.rc == 0
+          - "'hostname: lab-n2-volumes' in ct_config.stdout"
+          - "'unprivileged: 1' in ct_config.stdout"
+        fail_msg: 'BLOCKED: provision the disposable unprivileged CT 384 named lab-n2-volumes, its two assigned mounts, and supplied backup; this setup will not create or adopt another container.'
+    - name: Check for an existing ownership manifest
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: existing_manifest
+    - name: Create this lab's evidence directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Write the exact fixture manifest
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifest.yml"
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          lab: pve-maitriser-volumes-lxc
+          allocated: CTID 384; hostname lab-n2-volumes; managed volume lab-n2-volumes; bind mount /srv/lab-n2-share
+          pve_node_required: true
+          cluster_changes: forbidden
+          physical_network_changes: forbidden
+          external_prerequisite: disposable CT and supplied backup

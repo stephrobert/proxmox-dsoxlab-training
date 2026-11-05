@@ -1,0 +1,9 @@
+- name: Restore only owned assessment actions
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore failure/isolation before removing evidence; preserve all backups and guests
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

@@ -11,8 +11,8 @@ level: l1
 description: |
   A witness VM runs and its service listens, yet no client reaches it: its
   card is plugged into an isolated bridge. Find the cause from the node, plug
-  the card of that VM into vmbr0 without recreating the VM or touching the
-  isolated bridge, and prove that the fix survives a guest reboot and a reload
+  the card of that VM into vmbr0 without recreating the VM or adding a physical
+  interface to the isolated bridge, and prove that the fix survives a guest reboot and a reload
   of the node network.
 skills:
   - proxmox

@@ -11,7 +11,7 @@ title: "Read Proxmox tasks: tie each result to its task"
 level: l1
 description: |
   Three VMs were started and stopped on the node, one of them on a disk that no
-  longer exists. Read the task log through the interface and the API, report
+  longer exists. Read the task log through the interface or the API, report
   each start task by its UPID with its final result and cause, give the
   current state of the sentinel VM rather than its old log, then remove the
   temporary VMs without touching the sentinel.

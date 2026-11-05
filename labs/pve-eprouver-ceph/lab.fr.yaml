@@ -1,0 +1,3 @@
+title: "Déployer et dépanner un stockage Ceph"
+description: |
+  Sur un lab Ceph dédié et isolé uniquement, relevez la santé initiale et le contrat de réplication, observez la perte contrôlée de l’OSD explicitement désigné pour le lab, vérifiez que le volume RBD reste disponible selon la politique dégradée annoncée, puis rétablissez cet OSD et prouvez que les PG redeviennent sains et la réplication est restaurée. Ne prétendez pas mesurer le matériel.

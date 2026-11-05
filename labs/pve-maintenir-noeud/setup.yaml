@@ -1,0 +1,42 @@
+---
+- name: Preflight the assigned external state for pve-maintenir-noeud
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-maintenir-noeud
+  tasks:
+    - name: Require an already-installed Proxmox VE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Require an already-installed PVE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Require an active backup-capable storage for post-maintenance checks
+      ansible.builtin.command: pvesm status --output-format json
+      register: stores
+      changed_when: false
+      failed_when: stores.rc != 0 or 'active' not in stores.stdout or 'backup' not in stores.stdout
+    - name: Create this lab's evidence directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Write the exact external fixture manifest
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifest.yml"
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          lab: pve-maintenir-noeud
+          allocated: Disposable version-qualified node, verified backup storage and console; no VMID or package state is changed by setup.
+          pve_node_required: true
+          cluster_changes: forbidden
+          physical_network_changes: forbidden
+          external_prerequisite: must be supplied by the approved lab inventory

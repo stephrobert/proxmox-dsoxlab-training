@@ -1,0 +1,21 @@
+---
+- name: Préparer pve-preparer-laboratoire
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Installer l'émulateur QEMU utilisé par le contrôle KVM
+      ansible.builtin.apt:
+        name: qemu-system-x86
+        state: present
+        update_cache: true
+    - name: Créer le répertoire du lab
+      ansible.builtin.file:
+        path: /run/lab-proxmox/pve-preparer-laboratoire
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+    - name: Rappeler les limites du scénario
+      ansible.builtin.debug:
+        msg: >-
+          Préparer un environnement jetable, produire son inventaire et démontrer qu’il peut exécuter une VM accélérée. Cette préparation ne provisionne aucun hôte supplémentaire.

@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-proteger-sauvegardes
+title: Encrypt, retain, and verify backups
+level: l2
+description: 'Configure encryption, retention, and verification, then prove a recovered
+  key can restore data. Assigned scope: PBS storage lab-pbs-n2-208; supplied VM/backups,
+  limited identity, and offline key vault. Tests inspect native Proxmox state; no
+  Proxmox or cluster provisioning is performed.'
+skills:
+- proxmox
+- operations
+- security
+distros: [debian13]
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: intermediate
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Pre-installed Proxmox VE target; no cluster changes
+    label_fr: Cible Proxmox VE préinstallée ; aucune modification du cluster
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

@@ -1,0 +1,4 @@
+title: Mesurer la réplication ZFS et la frontière récupérable
+description: |
+  Vérifier les tâches terminées et leurs instantanés, imposer une panne du
+  lien, puis retrouver la séquence durable exacte après clôture de la source.

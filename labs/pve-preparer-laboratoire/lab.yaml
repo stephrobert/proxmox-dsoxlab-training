@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-preparer-laboratoire
+title: Préparer un laboratoire et son plan de ressources
+level: l1
+description: Préparer un environnement jetable, produire son inventaire et démontrer qu’il
+  peut exécuter une VM accélérée.
+skills:
+- proxmox
+- concevoir
+- n1
+distros:
+- debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: beginner
+estimated_time: 45m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Proxmox VE node and explicitly assigned guests
+    label_fr: Nœud Proxmox VE et invités attribués au lab
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

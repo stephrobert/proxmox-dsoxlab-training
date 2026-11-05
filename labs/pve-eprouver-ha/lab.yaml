@@ -1,0 +1,17 @@
+id: pve-eprouver-ha
+title: Exercise service failover without duplicate writers
+level: l3
+description: Impose a real node loss from an independent controller, correlate fencing/QEMU/HA states and external durable transactions, and test loss of majority.
+skills: [proxmox, ha, fencing, quorum]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/chapter-ha-manager.html
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: false}

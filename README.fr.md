@@ -42,12 +42,45 @@ L'apprenant atteint le résultat par le chemin qu'il choisit.
   virtualisation du processeur. Sous Linux,
   `cat /sys/module/kvm_intel/parameters/nested` (ou `kvm_amd`) doit rendre `Y`.
 - **6 Go de RAM libre et 60 Go de disque** pour l'unique machine, `pve.lab`.
+- **Pour les labs cluster :** un hôte distinct de 48 Go, dont 24 Go réservés
+  aux trois nœuds, et au moins 280 Go libres dans le pool libvirt.
 - **Un accès réseau sortant**, pour l'image de base et les dépôts Proxmox.
 
 Une machine virtuelle, `pve.lab` (Debian 13, 4 vCPU, 6 Go, 40 Go de disque
 système et un second disque brut de 20 Go), déclarée dans `meta.yml` et créée
-par `dsoxlab provision`. Proxmox VE remplace le noyau de la machine et prend la
-main sur son réseau : rien ne tourne sur votre poste.
+par `dsoxlab provision --host pve.lab`. Proxmox VE remplace le noyau de la
+machine et prend la main sur son réseau : rien ne tourne sur votre poste.
+
+Les labs cluster utilisent une cible distincte `proxmox-cluster` :
+`pve01.lab`, `pve02.lab` et `pve03.lab`, chacune avec 4 vCPU, 8 Go de RAM, un
+disque système de 40 Go et un disque supplémentaire de 40 Go. Le démarrage d'un
+lab cluster provisionne ces trois machines Debian 13 à la demande via le
+backend KVM. Cela ne crée **pas** le cluster Proxmox : l'apprenant doit le
+construire avec `pvecm`. Pour conserver les 24 Go réservés à l'hôte, utilisez
+les environnements mono-nœud et cluster l'un après l'autre.
+
+Pour démarrer explicitement un lab cluster :
+
+```bash
+dsoxlab start pve-eprouver-cluster --target proxmox-cluster
+```
+
+Ne lancez pas `dsoxlab provision` sans filtre : cette commande applique tout le
+catalogue. Lancez ce prévol de capacité en lecture seule, puis sélectionnez
+explicitement la cible cluster :
+
+```bash
+uv run python scripts/provision_cluster.py
+dsoxlab start pve-eprouver-cluster --target proxmox-cluster
+```
+
+Le prévol exige au minimum 26 Gio de RAM disponible, 280 Gio libres dans le
+pool libvirt, 12 CPU logiques et une charge CPU modérée. Les machines cluster
+peuvent ensuite lancer des invités supplémentaires. Le démarrage du lab
+provisionne les trois nœuds via le backend KVM ; il ne forme jamais le cluster.
+`--apply` du script est une autre méthode pour provisionner manuellement ces
+hôtes avant de démarrer un lab. `dsoxlab destroy` sans filtre détruit toute
+l'infrastructure du catalogue, pas seulement le cluster.
 
 `dsoxlab doctor` dit ce dont ce dépôt a besoin et ce dont il n'a pas besoin, et
 distingue un contrôle qui a échoué d'un contrôle qu'il n'a pas pu mesurer.
@@ -74,7 +107,7 @@ dsoxlab doctor
 
 ```bash
 export LAB_HOME=$PWD
-dsoxlab provision                          # crée pve.lab, une Debian 13 nue
+dsoxlab provision --host pve.lab            # crée uniquement le nœud de base
 dsoxlab list-labs                          # le catalogue, dans l'ordre pédagogique
 dsoxlab run       verifier-son-installation
 dsoxlab challenge verifier-son-installation   # le cahier des charges à tenir
@@ -139,7 +172,7 @@ travail, et ses invités vivent dans la machine, pas sur l'hôte de l'apprenant.
 
 | Runtime | Ce que le lab demande |
 |---|---|
-| `vm` | la machine `pve.lab`, créée par `dsoxlab provision`, sous Debian 13, avec la virtualisation imbriquée. L'apprenant y installe Proxmox VE, puis y crée ses invités. |
+| `vm` | la machine `pve.lab` pour les labs ordinaires, créée de façon ciblée, sous Debian 13, avec la virtualisation imbriquée. Les labs cluster sélectionnent la cible séparée `proxmox-cluster`, dont les trois nœuds sont provisionnés à la demande ; l'apprenant construit le cluster. |
 
 ### Le modèle de validation
 
@@ -175,8 +208,9 @@ Un 0 accuserait le lab de ce qui manque au poste.
 
 ## Catalogue
 
-À jouer dans l'ordre. D'autres labs s'ajoutent à mesure qu'ils sont écrits et
-prouvés dans les deux sens.
+À jouer dans l'ordre. La présence au catalogue signifie que le lab est écrit,
+pas qu'il est attesté. Il n'est prouvé qu'après échec des tests avant le geste
+et réussite après celui-ci sur l'environnement cible.
 
 <!-- LABS:START -->
 ### Déployer un nœud et ses premières instances

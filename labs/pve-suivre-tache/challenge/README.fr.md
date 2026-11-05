@@ -1,19 +1,17 @@
-# Challenge : un rapport de tâches juste, et un nœud remis en ordre
+# pve-suivre-tache
 
-Vous travaillez sur `pve.lab`. La consigne est dans
-`/opt/lab-proxmox/pve-suivre-tache/consigne.md`.
+Rédigez /root/rapport-taches.txt avec les clés demarrage-191, demarrage-192 et etat-190. Le lab fournit les tâches initiales et la sentinelle.
 
-## Ce qui est attendu
+## Exigences notées
 
-1. `/root/rapport-taches.txt` donne l'UPID exact des tâches de démarrage des
-   VM 191 et 192.
-2. Le démarrage de la 191 est noté `OK`, celui de la 192 porte le message
-   d'erreur final de sa tâche.
-3. L'état rapporté pour la 190 est son état actuel.
-4. Les VM 191 et 192 sont supprimées, la 190 est intacte.
+1. Rapportez l’UPID exact de la tâche de démarrage de la VM 191.
+2. Rapportez l’UPID exact de la tâche de démarrage de la VM 192.
+3. Rapportez le résultat final complet de la tâche de démarrage de la VM 191, sans modifier son texte.
+4. Rapportez le résultat final complet de la tâche de démarrage de la VM 192, sans modifier son texte.
+5. Rapportez l’état actuel de la VM 190, plutôt que le résultat de son ancien démarrage.
+6. Supprimez la VM temporaire 191.
+7. Supprimez la VM temporaire 192.
+8. Conservez la VM sentinelle 190.
+9. Préservez la configuration initiale de la VM sentinelle 190.
 
-## Ce qui est prouvé
-
-Les tests confrontent le rapport au registre des UPID gardé par le lab, lisent
-le statut final de chaque tâche par l'API, l'état de la 190 par `qm status`,
-et l'empreinte de sa configuration.
+Les contrôles de persistance effectuent un arrêt propre puis un démarrage et constatent les deux états. Les lectures impossibles refusent la mesure. Les contrôles de préservation ne sont comptés qu’une fois le rapport présent, le réseau rétabli ou l’agent joignable, selon le lab.

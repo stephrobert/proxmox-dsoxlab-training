@@ -1,0 +1,68 @@
+---
+# Guarded, bounded fixture only. This playbook never installs Proxmox VE.
+- name: Préparer pve-migrer-vmware
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Vérifier une installation PVE préexistante
+      ansible.builtin.command: pveversion --verbose
+      register: pve_version
+      changed_when: false
+      failed_when: false
+    - name: Bloquer clairement sur Debian nu ou sans PVE
+      ansible.builtin.assert:
+        that: pve_version.rc == 0
+        fail_msg: "BLOCKED: an already-installed Proxmox VE node is required; this lab never installs PVE."
+
+    - name: Vérifier un export OVF VMware autorisé
+      ansible.builtin.stat:
+        path: /opt/lab-proxmox/import/source.ovf
+      register: source_ovf
+    - name: Vérifier le fichier d’identifiants govc protégé
+      ansible.builtin.stat:
+        path: /etc/lab-proxmox/govc.env
+      register: govc_credentials
+    - name: Vérifier le chemin source VMware
+      ansible.builtin.stat:
+        path: /etc/lab-proxmox/vmware-source-path
+      register: source_path
+    - name: Bloquer si export ou vérification API source manque
+      ansible.builtin.assert:
+        that:
+          - source_ovf.stat.exists
+          - govc_credentials.stat.exists
+          - govc_credentials.stat.mode == '0600'
+          - source_path.stat.exists
+        fail_msg: "BLOCKED: authorized source.ovf, a mode-0600 govc environment file and a source inventory path are required."
+    - name: Vérifier l’accès API VMware sans afficher les identifiants
+      ansible.builtin.shell:
+        cmd: "set -a; . /etc/lab-proxmox/govc.env; set +a; govc about"
+        executable: /bin/bash
+      register: vmware_api
+      changed_when: false
+      no_log: true
+    - name: Refuser tout VMID déjà utilisé
+      ansible.builtin.command: "qm status {{ item }}"
+      loop: [1780]
+      register: vmid_checks
+      changed_when: false
+      failed_when: false
+    - name: Bloquer en cas de collision de VMID
+      ansible.builtin.assert:
+        that: "vmid_checks.results | selectattr('rc', 'equalto', 0) | list | length == 0"
+        fail_msg: "BLOCKED: reserved import VMID 1780 is already in use; cleanup never deletes pre-existing VMs."
+
+    - name: Créer le répertoire dédié
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-migrer-vmware
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Écrire le manifeste borné
+      ansible.builtin.copy:
+        dest: /opt/lab-proxmox/pve-migrer-vmware/manifest.json
+        owner: root
+        group: root
+        mode: '0640'
+        content: '{{ {"lab": "pve-migrer-vmware", "vmids": [1780], "template_vmid": null} | to_json }}'

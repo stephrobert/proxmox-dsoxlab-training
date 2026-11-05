@@ -1,0 +1,9 @@
+- name: Check ZFS replication prerequisites without provisioning
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Require prepared three-node cluster and allocated journal VM
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

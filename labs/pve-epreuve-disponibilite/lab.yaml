@@ -1,0 +1,17 @@
+id: pve-epreuve-disponibilite
+title: Availability assessment with independent disaster recovery
+level: l3
+description: Operate a qualified three-node cluster with reserve, impose real failure, measure unique-writer recovery and restore from secondary PBS without the primary.
+skills: [proxmox, ha, capacity, pbs, disaster-recovery]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/chapter-ha-manager.html
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: false}

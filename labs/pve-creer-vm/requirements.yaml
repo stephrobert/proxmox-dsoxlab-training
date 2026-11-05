@@ -1,0 +1,97 @@
+requirements:
+- id: '1'
+  test: test_une_propriete_materielle
+  arguments:
+  - name
+  - web-temoin
+  en: Configure VM 150 property name as web-temoin.
+  fr: Réglez la propriété name de la VM 150 à web-temoin.
+- id: '2'
+  test: test_une_propriete_materielle
+  arguments:
+  - machine
+  - q35
+  en: Configure VM 150 property machine as q35.
+  fr: Réglez la propriété machine de la VM 150 à q35.
+- id: '3'
+  test: test_une_propriete_materielle
+  arguments:
+  - bios
+  - ovmf
+  en: Configure VM 150 property bios as ovmf.
+  fr: Réglez la propriété bios de la VM 150 à ovmf.
+- id: '4'
+  test: test_une_propriete_materielle
+  arguments:
+  - cpu
+  - host
+  en: Configure VM 150 property cpu as host.
+  fr: Réglez la propriété cpu de la VM 150 à host.
+- id: '5'
+  test: test_une_propriete_materielle
+  arguments:
+  - scsihw
+  - virtio-scsi-single
+  en: Configure VM 150 property scsihw as virtio-scsi-single.
+  fr: Réglez la propriété scsihw de la VM 150 à virtio-scsi-single.
+- id: '6'
+  test: test_un_disque_est_sur_local
+  arguments:
+  - efidisk0
+  en: Create disk efidisk0 of VM 150 on local storage.
+  fr: Créez le disque efidisk0 de la VM 150 sur le stockage local.
+- id: '7'
+  test: test_un_disque_est_sur_local
+  arguments:
+  - scsi0
+  en: Create disk scsi0 of VM 150 on local storage.
+  fr: Créez le disque scsi0 de la VM 150 sur le stockage local.
+- id: '8'
+  test: test_la_carte_est_virtio
+  arguments: []
+  en: Use a VirtIO model for VM 150 net0.
+  fr: Utilisez le modèle VirtIO pour net0 de la VM 150.
+- id: '9'
+  test: test_le_pont_est_vmbr0
+  arguments: []
+  en: Attach VM 150 net0 to exactly vmbr0.
+  fr: Rattachez net0 de la VM 150 au pont exact vmbr0.
+- id: '10'
+  test: test_le_plafond_memoire
+  arguments: []
+  en: Allocate a positive amount of memory, at most 2048 MB, to VM 150.
+  fr: Attribuez à la VM 150 une quantité positive de mémoire, au plus 2048 Mo.
+- id: '11'
+  test: test_le_plafond_cpu
+  arguments: []
+  en: Allocate a positive number of virtual CPUs, at most two, to VM 150.
+  fr: Attribuez à la VM 150 un nombre positif de CPU virtuels, au plus deux.
+- id: '12'
+  test: test_aucune_iso_inseree
+  arguments: []
+  en: Remove the installation ISO from VM 150.
+  fr: Retirez l’ISO d’installation de la VM 150.
+- id: '13'
+  test: test_scsi0_est_premier
+  arguments: []
+  en: Put scsi0 first in VM 150 boot order.
+  fr: Placez scsi0 en tête de l’ordre de démarrage de la VM 150.
+- id: '14'
+  test: test_la_vm_tourne
+  arguments: []
+  en: Keep VM 150 running.
+  fr: Gardez la VM 150 en marche.
+- id: '15'
+  test: test_la_page_temoin_repond
+  arguments: []
+  en: Serve the exact session witness line at the address and port given by the manifest,
+    reachable from the node.
+  fr: Servez la ligne témoin exacte de la session à l’adresse et au port du manifeste,
+    accessible depuis le nœud.
+- id: '16'
+  test: test_le_service_survit_a_un_redemarrage_effectif
+  arguments: []
+  en: Have the VM witness service return without intervention after a clean stop and
+    start performed by the evaluator.
+  fr: Faites revenir le service témoin de la VM sans intervention après un arrêt propre
+    et un démarrage effectués par l’évaluateur.

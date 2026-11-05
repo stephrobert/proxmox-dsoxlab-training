@@ -1,0 +1,5 @@
+title: Observer la capacité et recevoir les alertes
+description: 'Mettre en place la surveillance d’un service et de ses ressources critiques,
+  puis provoquer et résoudre une alerte. Périmètre attribué : Métriques réelles du
+  nœud PVE ; récepteur local et charge invitée bornée fournis en externe. Les tests
+  lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

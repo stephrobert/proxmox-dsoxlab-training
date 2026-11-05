@@ -1,0 +1,5 @@
+title: Déployer PBS et réaliser une sauvegarde vérifiable
+description: 'Installer un PBS de lab, l’intégrer au nœud et sauvegarder deux charges
+  avec des identités limitées. Périmètre attribué : Stockage PVE lab-pbs-n2-207 ;
+  endpoint/datastore PBS et workloads VM/CT fournis en externe. Les tests lisent l’état
+  Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

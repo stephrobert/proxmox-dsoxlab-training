@@ -1,0 +1,5 @@
+title: Maintenir un nœud et préparer une montée de version
+description: 'Maintenir un nœud de laboratoire avec précontrôles, recette et procédure
+  de reprise documentée. Périmètre attribué : Copie jetable du nœud PVE qualifiée
+  par version, sauvegardes vérifiées et console ; aucun VMID/paquet modifié par le
+  setup. Les tests lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

@@ -1,0 +1,3 @@
+title: "Provisionner avec Terraform et des droits mesurés"
+description: |
+  Reprenez la VM préparée dans un projet Terraform explicite avec le provider bpg épinglé et une identité API à privilèges minimaux. Enregistrez un vrai plan et un état. Après application de la seule configuration prévue, planifiez à nouveau : prouvez que la configuration réelle de la VM correspond et que le second plan sauvegardé ne propose aucun changement.

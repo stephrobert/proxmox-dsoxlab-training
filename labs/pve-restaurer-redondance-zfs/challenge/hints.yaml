@@ -1,0 +1,22 @@
+en:
+- step: 1
+  text: Inspect the assigned Proxmox resource through its native config/status API
+    before editing; compare the observed state with the manifest.
+- step: 2
+  text: Use the narrowest PVE object scope and preserve the independent management/recovery
+    path. Re-query the effective state after applying the change.
+- step: 3
+  text: The test reads live PVE state (permissions, config, storage, network, or runtime
+    status). A command transcript or written claim is not evidence; stop if an external
+    fixture is missing.
+fr:
+- step: 1
+  text: Examinez la ressource Proxmox attribuée par son API native de configuration/état
+    avant toute modification ; comparez l’observation au manifeste.
+- step: 2
+  text: Choisissez le périmètre d’objet PVE le plus étroit et préservez le chemin
+    indépendant d’administration/secours. Relisez l’état effectif après le changement.
+- step: 3
+  text: Le test interroge l’état PVE réel (permissions, configuration, stockage, réseau
+    ou exécution). Une transcription ou une affirmation ne constitue pas une preuve
+    ; arrêtez-vous si une fixture externe manque.

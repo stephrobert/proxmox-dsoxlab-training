@@ -1,0 +1,41 @@
+---
+- name: Remove only the disposable diagnostic VM assigned to this lab
+  hosts: lab_target
+  become: true
+  vars:
+    vmid: 211
+    vm_name: n2-diagnostique
+    lab_dir: /opt/lab-proxmox/pve-diagnostiquer-instance
+  tasks:
+    - name: Require this lab's ownership manifest before cleanup
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: lab_manifest
+    - name: Refuse cleanup without the ownership marker
+      ansible.builtin.assert:
+        that:
+          - lab_manifest.stat.exists
+        fail_msg: 'Lab ownership manifest is absent; refusing to remove the diagnostic VM.'
+    - name: Read the assigned VM configuration
+      ansible.builtin.command: qm config {{ vmid }}
+      register: vm_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse to destroy a VM not owned by this lab
+      ansible.builtin.assert:
+        that:
+          - "vm_config.rc != 0 or ('name: ' ~ vm_name) in vm_config.stdout"
+        fail_msg: 'VMID 211 no longer matches the diagnostic fixture; refusing cleanup.'
+    - name: Stop the disposable VM if running
+      ansible.builtin.command: qm stop {{ vmid }}
+      when: vm_config.rc == 0
+      changed_when: true
+      failed_when: false
+    - name: Destroy only the assigned disposable VM and its attached disks
+      ansible.builtin.command: qm destroy {{ vmid }} --purge 1
+      when: vm_config.rc == 0
+      changed_when: true
+    - name: Remove this lab's manifest directory only
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: absent

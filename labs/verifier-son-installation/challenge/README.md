@@ -1,20 +1,18 @@
-# Challenge: a Proxmox VE you installed yourself
+# verifier-son-installation
 
-You work on `pve.lab`, a bare Debian 13. The full specification is on the
-machine, in `/opt/lab-proxmox/cahier-des-charges.md`.
+Install Proxmox VE on the bare Debian node. Debian, KVM, node sizing and the raw second disk are supplied prerequisites, not scored work.
 
-## What is expected
+## Graded requirements
 
-1. Proxmox VE is installed, version 9 or later, and `pveversion` answers.
-2. The `pve-cluster`, `pvedaemon` and `pveproxy` services are active, and the
-   web interface answers on port 8006.
-3. The `vmbr0` bridge exists and carries the server's IPv4 address.
-4. The `pve-no-subscription` repository is configured, and `apt-get update`
-   succeeds.
+1. Install Proxmox VE so pveversion reports pve-manager.
+2. Use Proxmox VE version 9 or later.
+3. Keep service pve-cluster active.
+4. Keep service pvedaemon active.
+5. Keep service pveproxy active.
+6. Serve an HTTP 200 response over HTTPS on port 8006.
+7. Make pveproxy own the listener on port 8006.
+8. Place the server IPv4 address, resolved from its hostname, on vmbr0.
+9. Enable a complete pve-no-subscription APT repository entry.
+10. Download all APT indexes without ignoring a repository download error.
 
-## What is proven
-
-The tests query the machine: the installed version, the services, the port that
-answers, the address carried by the bridge and the real result of `apt-get
-update`. They do not read the commands you typed, and every failing item is
-named along with what to fix.
+Persistence checks perform a clean stop and start and observe both states. Unreadable measurements fail. Preservation checks only count once the report exists, the network is repaired or the agent answers, depending on the lab.

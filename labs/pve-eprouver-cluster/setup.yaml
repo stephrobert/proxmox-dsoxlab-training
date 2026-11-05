@@ -1,0 +1,9 @@
+- name: Prepare the cluster exercise from its independent controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Check explicit allocation and preinstalled hosts without provisioning
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

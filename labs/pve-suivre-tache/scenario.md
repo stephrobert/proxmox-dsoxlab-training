@@ -17,14 +17,19 @@ the model of the expected report.
 4. Write it all into `/root/rapport-taches.txt`, then delete VMs 191 and 192
    without touching 190.
 
-## What is graded
+## Graded requirements
 
-| # | What is checked | How |
-|---|---|---|
-| 1 | Correlation | every UPID in the report is that of the right start task |
-| 2 | The failure | the start of 192 is not reported OK, and its cause matches the task's final message |
-| 3 | Current state | the state reported for 190 is its current state, not the one from its old log |
-| 4 | Cleanliness | 191 and 192 no longer exist, 190 exists and its configuration did not change |
+1. Report the exact start-task UPID for VM 191.
+2. Report the exact start-task UPID for VM 192.
+3. Report the complete final result of the start task for VM 191, preserving its text.
+4. Report the complete final result of the start task for VM 192, preserving its text.
+5. Report the current state of VM 190, rather than its historical start result.
+6. Delete temporary VM 191.
+7. Delete temporary VM 192.
+8. Keep sentinel VM 190 present.
+9. Preserve the initial configuration of sentinel VM 190.
+
+Persistence checks perform a clean stop and start and observe both states. Unreadable measurements fail. Preservation checks only count once the report exists, the network is repaired or the agent answers, depending on the lab.
 
 ## Starting over
 

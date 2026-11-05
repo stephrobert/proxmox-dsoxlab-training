@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-filtrer-flux
+title: Filter management and guest traffic
+level: l2
+description: 'Apply a minimal traffic policy between administration, guests, and an
+  unauthorized client. Assigned scope: VMID 203 and its per-VM firewall file /etc/pve/firewall/203.fw;
+  no physical NIC or external network is assigned. Tests inspect native Proxmox state;
+  no Proxmox or cluster provisioning is performed.'
+skills:
+- proxmox
+- operations
+- security
+distros: [debian13]
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: intermediate
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Pre-installed Proxmox VE target; no cluster changes
+    label_fr: Cible Proxmox VE préinstallée ; aucune modification du cluster
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

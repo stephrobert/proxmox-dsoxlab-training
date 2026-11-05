@@ -11,8 +11,8 @@ level: l1
 description: |
   The QEMU guest agent of VM 180 does not answer, for one of two causes drawn
   at random: the device is not enabled in Proxmox, or the package is missing in
-  the guest. Find which one, fix it, restart the VM cleanly rather than forcing
-  it off, and prove from the node that the agent answers and reports the right
+  the guest. Find which one, fix it, use a clean restart if needed, and prove
+  from the node that the agent answers and reports the right
   address while the workload keeps its data.
 skills:
   - proxmox
@@ -35,4 +35,6 @@ runtime:
   default: pve
 validation:
   functional: true
-  persistence_after_reboot: true
+  # Le lab note le rétablissement courant et les tâches d'arrêt, pas une
+  # épreuve supplémentaire de persistance après un redémarrage du banc.
+  persistence_after_reboot: false

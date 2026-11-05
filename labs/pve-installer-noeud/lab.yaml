@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-installer-noeud
+title: Installer Proxmox et établir un accès fiable
+level: l1
+description: Installer réellement un nœud depuis une ISO contrôlée et le remettre à un collègue
+  avec un accès vérifié.
+skills:
+- proxmox
+- deployer
+- n1
+distros:
+- debian13
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation/
+lab_type: lab
+difficulty: beginner
+estimated_time: 45m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Proxmox VE node and explicitly assigned guests
+    label_fr: Nœud Proxmox VE et invités attribués au lab
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

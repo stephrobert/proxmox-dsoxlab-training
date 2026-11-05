@@ -1,0 +1,62 @@
+---
+- name: Remove only resources allocated to pve-securiser-identites
+  hosts: lab_target
+  become: true
+  vars:
+    vmid: 202
+    vm_name: n2-securiserid
+    lab_dir: /opt/lab-proxmox/pve-securiser-identites
+  tasks:
+    - name: Require this lab's ownership manifest before cleanup
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: lab_manifest
+    - name: Refuse cleanup without the lab ownership marker
+      ansible.builtin.assert:
+        that:
+          - lab_manifest.stat.exists
+        fail_msg: 'Lab ownership manifest is absent; refusing to remove any VM or directory.'
+    - name: Read the allocated VM configuration
+      ansible.builtin.command: qm config {{ vmid }}
+      register: vm_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse to destroy a VMID not owned by this lab
+      ansible.builtin.assert:
+        that:
+          - "vm_config.rc != 0 or ('name: ' ~ vm_name) in vm_config.stdout"
+        fail_msg: 'VMID {{ vmid }} no longer matches this lab manifest; refusing cleanup.'
+    - name: Stop the named lab VM if running
+      ansible.builtin.command: qm stop {{ vmid }}
+      when: vm_config.rc == 0
+      changed_when: true
+      failed_when: false
+    - name: Destroy the named lab VM and only its owned disks
+      ansible.builtin.command: qm destroy {{ vmid }} --purge 1
+      when: vm_config.rc == 0
+      changed_when: true
+    - name: Check whether the named API token exists
+      ansible.builtin.command: pveum user token list automation-n2@pve --output-format json
+      register: tokens
+      changed_when: false
+      failed_when: false
+    - name: Remove only the lab token if present
+      ansible.builtin.command: pveum user token remove automation-n2@pve lab-n2
+      when: tokens.rc == 0 and 'lab-n2' in tokens.stdout
+      changed_when: true
+    - name: Remove only the assigned VM ACL entries
+      ansible.builtin.command: >-
+        pveum acl delete /vms/202 {{ item }}
+      loop:
+        - --users automation-n2@pve
+        - --tokens automation-n2@pve!lab-n2
+      changed_when: true
+      failed_when: false
+    - name: Remove the exact lab machine identity
+      ansible.builtin.command: pveum user delete automation-n2@pve
+      changed_when: true
+      failed_when: false
+    - name: Remove this lab's manifest directory only
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: absent

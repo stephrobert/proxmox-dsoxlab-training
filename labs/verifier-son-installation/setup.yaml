@@ -25,9 +25,9 @@
       ansible.builtin.fail:
         msg: >-
           Proxmox est déjà installé sur cette machine ({{ deja_installe.stdout }}).
-          Ce lab demande une Debian 13 NUE : relancez `dsoxlab clean` puis
-          `dsoxlab run verifier-son-installation` pour repartir d'une machine
-          vierge.
+          Ce lab demande une Debian 13 NUE : restaurez sa base vierge ou
+          reprovisionnez la machine avant de relancer ce lab. `dsoxlab clean`
+          retire la consigne, mais ne désinstalle pas Proxmox.
       when: deja_installe.rc == 0
 
     # Les quatre controles qui suivent portent sur des PREREQUIS, que le
@@ -156,17 +156,18 @@
           Le guide décrit la marche à suivre :
           https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation/
 
-          ## Les postes notés
+          ## Le travail noté
 
-          1. Proxmox VE 9 répond à `pveversion`
-          2. la base est bien Debian 13 « trixie »
-          3. les services pve-cluster, pvedaemon et pveproxy sont actifs
-          4. l'interface web écoute sur le port 8006, tenue par pveproxy
-          5. le pont vmbr0 existe et porte l'adresse du serveur
-          6. /dev/kvm est présent, donc la virtualisation imbriquée arrive ici
-          7. la machine a 4 vCPU et 6 Go de RAM
-          8. un second disque d'au moins 20 Go est présent, et RESTE BRUT
-          9. le dépôt pve-no-subscription est configuré et `apt-get update` passe
+          Installez Proxmox VE 9 ou ultérieur. Chaque service (pve-cluster,
+          pvedaemon, pveproxy), la réponse HTTP 200 sur 8006, le propriétaire
+          pveproxy du port, l'adresse du serveur sur vmbr0, le dépôt actif
+          pve-no-subscription et le téléchargement des index APT ont leur
+          propre contrôle. La liste EN/FR est dans challenge/README.
+
+          ## Les prérequis fournis, non notés
+
+          Debian 13, /dev/kvm, 4 vCPU, 6 Go de RAM et le second disque brut
+          de 20 Go sont vérifiés par la préparation. Ils ne donnent aucun point.
 
           ## Deux points qui coûtent cher
 

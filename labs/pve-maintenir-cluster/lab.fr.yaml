@@ -1,0 +1,5 @@
+title: Maintenir un nœud en préservant le contrat de service
+description: |
+  Évacuer les charges attribuées, empêcher la maintenance concurrente,
+  observer quorum et réserve, puis vérifier réintégration, service et sauvegarde
+  restaurée.

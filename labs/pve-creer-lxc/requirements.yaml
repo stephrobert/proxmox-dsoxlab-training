@@ -1,0 +1,138 @@
+requirements:
+- id: '1'
+  test: test_une_propriete_du_conteneur
+  arguments:
+  - hostname
+  - ct-web
+  en: Configure container 170 property hostname as ct-web.
+  fr: Réglez la propriété hostname du conteneur 170 à ct-web.
+- id: '2'
+  test: test_une_propriete_du_conteneur
+  arguments:
+  - unprivileged
+  - '1'
+  en: Configure container 170 property unprivileged as 1.
+  fr: Réglez la propriété unprivileged du conteneur 170 à 1.
+- id: '3'
+  test: test_une_propriete_du_conteneur
+  arguments:
+  - memory
+  - '512'
+  en: Configure container 170 property memory as 512.
+  fr: Réglez la propriété memory du conteneur 170 à 512.
+- id: '4'
+  test: test_une_propriete_du_conteneur
+  arguments:
+  - swap
+  - '0'
+  en: Configure container 170 property swap as 0.
+  fr: Réglez la propriété swap du conteneur 170 à 0.
+- id: '5'
+  test: test_une_propriete_du_conteneur
+  arguments:
+  - cores
+  - '1'
+  en: Configure container 170 property cores as 1.
+  fr: Réglez la propriété cores du conteneur 170 à 1.
+- id: '6'
+  test: test_le_stockage_est_local
+  arguments: []
+  en: Create the container root filesystem on local storage.
+  fr: Créez le système de fichiers racine du conteneur sur le stockage local.
+- id: '7'
+  test: test_une_propriete_reseau
+  arguments:
+  - bridge
+  - vmbr0
+  en: Configure container net0 property bridge as vmbr0.
+  fr: Réglez la propriété bridge de net0 du conteneur à vmbr0.
+- id: '8'
+  test: test_une_propriete_reseau
+  arguments:
+  - ip
+  - 10.10.113.170/24
+  en: Configure container net0 property ip as 10.10.113.170/24.
+  fr: Réglez la propriété ip de net0 du conteneur à 10.10.113.170/24.
+- id: '9'
+  test: test_une_propriete_reseau
+  arguments:
+  - gw
+  - 10.10.113.1
+  en: Configure container net0 property gw as 10.10.113.1.
+  fr: Réglez la propriété gw de net0 du conteneur à 10.10.113.1.
+- id: '10'
+  test: test_le_dns_est_celui_du_manifeste
+  arguments: []
+  en: Configure container DNS as 10.10.113.1.
+  fr: Configurez le DNS du conteneur à 10.10.113.1.
+- id: '11'
+  test: test_le_conteneur_tourne
+  arguments: []
+  en: Keep container 170 running.
+  fr: Gardez le conteneur 170 en marche.
+- id: '12'
+  test: test_root_est_effectivement_decale
+  arguments: []
+  en: Map container UID 0 to an unprivileged host UID of at least 100000.
+  fr: Projetez l’UID 0 du conteneur sur un UID non privilégié de l’hôte, au moins
+    égal à 100000.
+- id: '13'
+  test: test_la_distribution_est_debian_13
+  arguments: []
+  en: Run Debian 13 inside the container.
+  fr: Exécutez Debian 13 dans le conteneur.
+- id: '14'
+  test: test_python3_est_installe
+  arguments: []
+  en: Install an executable python3 inside the container.
+  fr: Installez un python3 exécutable dans le conteneur.
+- id: '15'
+  test: test_web_est_un_compte_systeme
+  arguments: []
+  en: Create web as a non-root system account with an UID below UID_MIN.
+  fr: Créez web comme compte système non root avec un UID inférieur à UID_MIN.
+- id: '16'
+  test: test_la_page_temoin_repond
+  arguments: []
+  en: Serve the exact session witness line at the address and port given by the manifest,
+    reachable from the node.
+  fr: Servez la ligne témoin exacte de la session à l’adresse et au port du manifeste,
+    accessible depuis le nœud.
+- id: '17'
+  test: test_le_processus_qui_ecoute_appartient_a_web
+  arguments: []
+  en: Run the process actually listening on container port 8080 as web.
+  fr: Exécutez sous web le processus qui écoute réellement sur le port 8080 du conteneur.
+- id: '18'
+  test: test_une_limite_memoire_effective
+  arguments:
+  - memory.max
+  - '536870912'
+  en: Enforce cgroup memory.max as 536870912.
+  fr: Appliquez effectivement la valeur 536870912 au fichier cgroup memory.max.
+- id: '19'
+  test: test_une_limite_memoire_effective
+  arguments:
+  - memory.swap.max
+  - '0'
+  en: Enforce cgroup memory.swap.max as 0.
+  fr: Appliquez effectivement la valeur 0 au fichier cgroup memory.swap.max.
+- id: '20'
+  test: test_un_seul_cpu_est_effectif
+  arguments: []
+  en: Restrict the effective container CPU set to exactly one CPU.
+  fr: Limitez l’ensemble effectif des CPU du conteneur à exactement un CPU.
+- id: '21'
+  test: test_les_donnees_survivent_au_redemarrage
+  arguments: []
+  en: Preserve a file through a clean container stop and start; the evaluator creates
+    and removes this measurement file.
+  fr: Préservez un fichier lors d’un arrêt propre puis d’un démarrage du conteneur
+    ; l’évaluateur crée et retire ce fichier de mesure.
+- id: '22'
+  test: test_le_service_survit_au_redemarrage
+  arguments: []
+  en: Have the container witness service return without intervention after a clean
+    stop and start.
+  fr: Faites revenir le service témoin du conteneur sans intervention après un arrêt
+    propre et un démarrage.

@@ -1,0 +1,4 @@
+# Surcharge française du manifeste.
+title: Livrer et restaurer un premier service virtualisé
+description: >-
+  À partir d’un nœud vide installé par vos soins, livrer une VM et un CT Linux répondant au cahier des charges, puis restaurer les données du service dans une nouvelle instance.

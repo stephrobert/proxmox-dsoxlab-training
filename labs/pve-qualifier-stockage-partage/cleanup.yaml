@@ -1,0 +1,9 @@
+- name: Restore only the allocated storage experiment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore owned actions; preserve volumes, exports and guests
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

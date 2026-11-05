@@ -1,0 +1,3 @@
+title: "Automatiser les opérations avec Ansible"
+description: |
+  Avec l’identité de lecture, démontrez qu’une opération d’alimentation est refusée, puis utilisez une identité opérateur limitée à la VM cible pour l’arrêter. Rejouez une seconde fois le playbook d’état voulu. Les tests inspectent l’état réel des VM et l’historique des tâches Proxmox, pas le texte du playbook ni un récapitulatif déclaré.

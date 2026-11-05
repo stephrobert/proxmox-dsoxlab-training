@@ -1,0 +1,9 @@
+- name: Restore bounded HA experiment only
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore before removing evidence; never force quorum or delete guests
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

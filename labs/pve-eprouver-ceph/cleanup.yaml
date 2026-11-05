@@ -1,0 +1,40 @@
+---
+# Scoped cleanup: only resources assigned to pve-eprouver-ceph; never remove shared prerequisites.
+- name: Nettoyer pve-eprouver-ceph
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Aucun VM n’est créé par ce lab
+      ansible.builtin.debug:
+        msg: "No VM fixture to remove."
+
+    - name: Retirer uniquement l’image et le pool dédiés au lab
+      ansible.builtin.shell:
+        cmd: |
+          set -uo pipefail
+          if ! ceph osd pool ls | grep -Fxq n4-lab; then
+            echo "SKIPPED"
+            exit 0
+          fi
+          owner="$(ceph osd pool application get n4-lab rbd dsoxlab_lab 2>/dev/null)" || {
+            echo "BLOCKED: n4-lab has no verifiable pve-eprouver-ceph ownership marker." >&2
+            exit 23
+          }
+          if [ "$owner" != "pve-eprouver-ceph" ]; then
+            echo "BLOCKED: n4-lab ownership marker does not match this lab." >&2
+            exit 23
+          fi
+          if rbd info n4-lab/probe >/dev/null 2>&1; then
+            rbd rm n4-lab/probe
+          fi
+          ceph osd pool delete n4-lab n4-lab --yes-i-really-really-mean-it
+          echo "REMOVED"
+        executable: /bin/bash
+      register: retrait_ceph
+      changed_when: "'REMOVED' in retrait_ceph.stdout"
+      failed_when: retrait_ceph.rc not in [0]
+
+    - name: Retirer les seuls fichiers du lab
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-eprouver-ceph
+        state: absent

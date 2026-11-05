@@ -1,0 +1,12 @@
+{
+  "id": "pve-eprouver-cluster",
+  "guest_ids": [],
+  "storage_id": "n3-cluster",
+  "required_sources": [],
+  "points_a_tester": [
+    {"id": "coherence", "attendu": "Les nœuds appartiennent au même cluster sain.", "methode": "Comparer membres, votes, versions et configuration distribuée depuis plusieurs nœuds."},
+    {"id": "majorite", "attendu": "Deux nœuds sur trois conservent le quorum.", "methode": "Couper un nœud par le contrôleur extérieur et vérifier l’état sur les deux survivants."},
+    {"id": "sans-quorum", "attendu": "La perte de majorité provoque les refus attendus.", "methode": "Isoler le dernier votant et vérifier les opérations bloquées ; refuser expected votes modifié ou contournement de verrouillage."},
+    {"id": "retour", "attendu": "Le rétablissement retrouve une seule configuration cohérente.", "methode": "Rétablir les liens et comparer l’ensemble des membres et les tâches en cours sans doublon de cluster."}
+  ]
+}

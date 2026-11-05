@@ -1,0 +1,17 @@
+id: pve-qualifier-stockage-partage
+title: Qualify shared storage and its failure boundary
+level: l3
+description: Verify real NFS dataset identity, permissions, I/O failure and durable recovery across three preinstalled nodes.
+skills: [proxmox, nfs, storage, failure-testing]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/chapter-pvesm.html
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: false}

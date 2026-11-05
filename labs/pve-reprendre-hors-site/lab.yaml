@@ -1,0 +1,16 @@
+id: pve-reprendre-hors-site
+title: Recover from a secondary PBS without primary-site dependencies
+level: l3
+description: Verify the secondary manifest and sync, block primary dependencies, restore with external rescue keys and measure durable RPO/RTO.
+skills: [proxmox, pbs, disaster-recovery, rpo, rto]
+distros: [debian13]
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: false}

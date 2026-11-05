@@ -118,12 +118,14 @@
               [Install]
               WantedBy=multi-user.target
 
-          Placez la ligne dans /srv/temoin/index.html, l'unité dans
-          /etc/systemd/system/temoin.service, puis activez-la.
+          Pour cet exemple, vous pouvez placer la ligne dans
+          /srv/temoin/index.html et l’unité dans
+          /etc/systemd/system/temoin.service, puis l’activer. Ces chemins
+          et le choix de Python sont une méthode proposée, pas des livrables notés.
 
     - name: Afficher la consigne
       ansible.builtin.debug:
         msg: >-
           Le manifeste du lab est dans {{ lab_dir }}/manifeste.md. Créez la VM
-          {{ vmid }} depuis l'ISO fournie, installez Debian, puis servez la page
+          {{ vmid }} selon les exigences de l’énoncé, puis servez la page
           témoin sur {{ adresse_vm }}:8080.

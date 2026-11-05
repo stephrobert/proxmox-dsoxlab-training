@@ -19,16 +19,21 @@ témoin de cette session : recréer la VM ne la rendrait pas.
    isolé.
 3. Vérifiez depuis le nœud que la page témoin répond.
 
-## Ce qui est noté
+## Exigences notées
 
-| # | Ce qui est vérifié | Comment |
-|---|---|---|
-| 1 | La topologie | `net0` porte `bridge=vmbr0`, et `tap160i0` est un port effectif de `vmbr0` |
-| 2 | La bonne instance | la page lue depuis le nœud contient le nonce de la session |
-| 3 | Le bon étage | la VM est joignable, et le pont isolé n'a reçu aucun port physique |
-| 4 | La persistance | après un redémarrage de l'invité et un `ifreload -a` du nœud, la page revient |
+1. Rattachez net0 de la VM 160 au pont exact vmbr0.
+2. Faites de l’interface exacte tap160i0 un port effectif de vmbr0.
+3. Servez la ligne témoin exacte de la session à l’adresse et au port du manifeste, accessible depuis le nœud.
+4. Gardez les interfaces physiques hors du pont isolé vmbr9.
+5. Préservez l’identité SMBIOS de la VM 160 sans déclencher de nouvelle tâche de création de cette VM.
+6. Préservez la joignabilité après un arrêt propre et un démarrage de la VM 160.
+7. Préservez la joignabilité après le rechargement réussi du réseau du nœud par l’évaluateur.
+
+Les contrôles de persistance effectuent un arrêt propre puis un démarrage et constatent les deux états. Les lectures impossibles refusent la mesure. Les contrôles de préservation ne sont comptés qu’une fois le rapport présent, le réseau rétabli ou l’agent joignable, selon le lab.
 
 ## Recommencer
 
 `dsoxlab clean pve-raccorder-instance` détruit la VM 160 et retire le pont
 isolé. Le nœud reste en place.
+
+Pour vérifier l’origine de la page, l’évaluateur désactive temporairement l’interface virtuelle de l’invité, constate que le service devient inaccessible, puis restaure l’interface. Il ne modifie pas l’interface de gestion du nœud.

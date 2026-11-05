@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-deleguer-acces
+title: Delegate pool access without widening scope
+level: l2
+description: 'Delegate operation of one resource pool to a team while preserving a
+  verifiable boundary around its neighbour. Assigned scope: VMIDs 201/n2-delegueracc
+  and 216/n2-voisin; pools lab-n2-deleguer and lab-n2-voisin; test accounts equipe-n2@pve,
+  auditeur-n2@pve, and secours-n2@pve. Tests inspect native Proxmox state; no Proxmox
+  or cluster provisioning is performed.'
+skills:
+- proxmox
+- operations
+- security
+distros: [debian13]
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: intermediate
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Pre-installed Proxmox VE target; no cluster changes
+    label_fr: Cible Proxmox VE préinstallée ; aucune modification du cluster
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

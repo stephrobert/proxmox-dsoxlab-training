@@ -1,0 +1,40 @@
+requirements:
+- id: '1'
+  test: test_net0_designe_exactement_vmbr0
+  arguments: []
+  en: Attach VM 160 net0 to exactly vmbr0.
+  fr: Rattachez net0 de la VM 160 au pont exact vmbr0.
+- id: '2'
+  test: test_le_port_effectif_appartient_a_vmbr0
+  arguments: []
+  en: Make the exact interface tap160i0 an effective port of vmbr0.
+  fr: Faites de l’interface exacte tap160i0 un port effectif de vmbr0.
+- id: '3'
+  test: test_la_page_temoin_repond
+  arguments: []
+  en: Serve the exact session witness line at the address and port given by the manifest,
+    reachable from the node.
+  fr: Servez la ligne témoin exacte de la session à l’adresse et au port du manifeste,
+    accessible depuis le nœud.
+- id: '4'
+  test: test_vmbr9_reste_sans_port_physique
+  arguments: []
+  en: Keep physical interfaces out of isolated bridge vmbr9.
+  fr: Gardez les interfaces physiques hors du pont isolé vmbr9.
+- id: '5'
+  test: test_la_vm_n_a_pas_ete_recreee
+  arguments: []
+  en: Preserve VM 160 SMBIOS identity and create no new VM 160 creation task.
+  fr: Préservez l’identité SMBIOS de la VM 160 sans déclencher de nouvelle tâche de
+    création de cette VM.
+- id: '6'
+  test: test_la_correction_survit_au_redemarrage
+  arguments: []
+  en: Preserve reachability through a clean stop and start of VM 160.
+  fr: Préservez la joignabilité après un arrêt propre et un démarrage de la VM 160.
+- id: '7'
+  test: test_la_correction_survit_au_rechargement_reseau
+  arguments: []
+  en: Preserve reachability after the evaluator successfully reloads the node network.
+  fr: Préservez la joignabilité après le rechargement réussi du réseau du nœud par
+    l’évaluateur.

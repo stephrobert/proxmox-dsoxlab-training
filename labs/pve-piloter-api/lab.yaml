@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-piloter-api
+title: "Pilot the API and wait for real results"
+level: l3
+description: |
+  Write and run a small API client that starts the prepared VM once, tracks the returned UPID to its final state with bounded polling, and resumes observing that same task after a client timeout. Keep the token out of reports and logs.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://pve.proxmox.com/pve-docs/api-viewer/
+lab_type: lab
+difficulty: advanced
+estimated_time: 35m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

@@ -1,17 +1,16 @@
-# Challenge: restore the guest agent, with no forced stop
+# pve-reparer-agent
 
-You work on `pve.lab`. The manifest is in
-`/opt/lab-proxmox/pve-reparer-agent/manifeste.md`.
+Restore the guest agent of VM 180 while preserving the supplied workload.
 
-## What is expected
+## Graded requirements
 
-1. The agent device is enabled, `qm agent 180 ping` answers, and the channel
-   `/dev/virtio-ports/org.qemu.guest_agent.0` exists in the guest.
-2. `qm agent 180 network-get-interfaces` reports `10.10.113.180`.
-3. The VM was never force-stopped since the lab started, and the witness page
-   still answers with the session data.
+1. Restore a successful guest agent ping.
+2. Enable the guest agent device in VM 180 configuration.
+3. Provide /dev/virtio-ports/org.qemu.guest_agent.0 inside VM 180.
+4. Have the agent report 10.10.113.180 outside the loopback interface.
+5. Avoid any qmstop task for VM 180 since the lab started.
+6. Keep the VM 180 witness page accessible with its exact session line.
 
-## What is proven
+Persistence checks perform a clean stop and start and observe both states. Unreadable measurements fail. Preservation checks only count once the report exists, the network is repaired or the agent answers, depending on the lab.
 
-The tests query the agent from the node, read the Proxmox task log looking for
-a `qmstop`, and read the witness page from the node.
+To check page origin, the evaluator temporarily disables the guest virtual interface, observes that the service becomes unreachable, then restores the interface. It does not change the node management interface.

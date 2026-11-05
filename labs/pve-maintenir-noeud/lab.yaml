@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-maintenir-noeud
+title: Maintain a node and prepare an upgrade
+level: l2
+description: 'Maintain a lab node using prechecks, a post-change acceptance test,
+  and a documented recovery procedure. Assigned scope: Disposable version-qualified
+  PVE node, verified backups, and console; setup changes no VMID or package state.
+  Tests inspect native Proxmox state; no Proxmox or cluster provisioning is performed.'
+skills:
+- proxmox
+- operations
+- security
+distros: [debian13]
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: intermediate
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Pre-installed Proxmox VE target; no cluster changes
+    label_fr: Cible Proxmox VE préinstallée ; aucune modification du cluster
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

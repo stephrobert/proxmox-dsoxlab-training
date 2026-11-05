@@ -1,0 +1,4 @@
+title: "Éprouver une livraison de plateforme reproductible"
+title: "Livrer une plateforme reproductible par API et IaC"
+description: |
+  Validez l’épreuve pratique N4 : utilisez l’API, l’état/plan Terraform, un inventaire Ansible rafraîchi, des opérations Ansible idempotentes et une recette de livraison bornée. Prouvez le service réel de l’invité et une sauvegarde restaurable ; rejouez sans recréer ni redémarrer l’invité.

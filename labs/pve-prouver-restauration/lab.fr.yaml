@@ -1,0 +1,6 @@
+title: Restaurer un service et mesurer RPO et RTO
+description: 'Rétablir une application depuis PBS avec source indisponible et rendre
+  un bilan de reprise vérifiable. Périmètre attribué : VM de reprise vide 209 nommée
+  n2-restored-209 ; stockage PBS lab-pbs-n2-209 ; sauvegarde/journal évaluateur et
+  réseau isolé. Les tests lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est
+  installé/préparé.'

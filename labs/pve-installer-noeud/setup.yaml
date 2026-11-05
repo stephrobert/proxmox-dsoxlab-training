@@ -1,0 +1,109 @@
+---
+- name: Préparer le support d'installation Proxmox imbriqué attribué
+  hosts: lab_target
+  become: true
+  vars:
+    vmid: 190
+    lab_dir: /opt/lab-proxmox/pve-installer-noeud
+    iso_volid: "{{ pve_installer_iso_volid | default('') }}"
+    iso_sha256: "{{ pve_installer_iso_sha256 | default('') }}"
+    iso_path: "/var/lib/vz/template/iso/{{ iso_volid | regex_replace('^local:iso/', '') }}"
+  tasks:
+    - name: Disposer du nœud Proxmox extérieur qui porte la VM de recette
+      ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+
+    - name: Exiger le volume et l'empreinte attendue de l'ISO fournie au lab
+      ansible.builtin.assert:
+        that:
+          - iso_volid is match('^local:iso/[A-Za-z0-9._+-]+\\.iso$')
+          - iso_sha256 is match('^[a-fA-F0-9]{64}$')
+        fail_msg: Fournissez pve_installer_iso_volid et pve_installer_iso_sha256 depuis l'allocation vérifiée.
+
+    - name: Mesurer l'empreinte de l'ISO présente sur le stockage local
+      ansible.builtin.stat:
+        path: "{{ iso_path }}"
+        checksum_algorithm: sha256
+      register: iso_stat
+
+    - name: Refuser toute ISO absente ou dont l'empreinte ne correspond pas
+      ansible.builtin.assert:
+        that:
+          - iso_stat.stat.exists
+          - iso_stat.stat.checksum | lower == iso_sha256 | lower
+        fail_msg: L'ISO locale ne correspond pas à l'empreinte attribuée au lab.
+
+    - name: Examiner la configuration du VMID attribué
+      ansible.builtin.command:
+        argv: [qm, config, "{{ vmid }}"]
+      register: vm_config
+      changed_when: false
+      failed_when: false
+
+    - name: Refuser une VMID occupée par une ressource hors de ce lab
+      ansible.builtin.assert:
+        that:
+          - vm_config.rc != 0 or 'dsoxlab-lab=pve-installer-noeud' in vm_config.stdout
+        fail_msg: La VMID 190 existe sans marqueur de propriété de ce lab ; aucune modification effectuée.
+
+    - name: Créer le répertoire du lab
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Créer la VM imbriquée vide avec ses supports attribués
+      ansible.builtin.command:
+        argv:
+          - qm
+          - create
+          - "{{ vmid }}"
+          - --name
+          - pve-installer-lab
+          - --description
+          - dsoxlab-lab=pve-installer-noeud
+          - --machine
+          - q35
+          - --cpu
+          - host
+          - --cores
+          - "2"
+          - --memory
+          - "4096"
+          - --net0
+          - virtio,bridge=vmbr0
+          - --scsihw
+          - virtio-scsi-pci
+          - --scsi0
+          - local:32,format=qcow2
+          - --ide2
+          - "{{ iso_volid }},media=cdrom"
+          - --boot
+          - order=ide2;scsi0
+          - --agent
+          - enabled=1
+      when: vm_config.rc != 0
+      changed_when: true
+
+    - name: Démarrer le support d'installation
+      ansible.builtin.command:
+        argv: [qm, start, "{{ vmid }}"]
+      register: start_result
+      changed_when: start_result.rc == 0
+      failed_when: start_result.rc != 0 and 'already running' not in start_result.stderr
+
+    - name: Écrire le manifeste des ressources réservées
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifeste.md"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Ressources attribuées — installation imbriquée
+
+          - VMID : 190, propriété : `dsoxlab-lab=pve-installer-noeud`
+          - CPU : 2 vCPU ; mémoire : 4096 Mio ; disque système : 32 Gio
+          - ISO : `{{ iso_volid }}`
+          - SHA-256 ISO attendu : `{{ iso_sha256 }}`
+          - Installez Proxmox VE manuellement depuis la console de la VM ; aucune image préinstallée n'est utilisée.

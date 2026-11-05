@@ -1,0 +1,5 @@
+title: Chiffrer, conserver et vérifier les sauvegardes
+description: 'Configurer chiffrement, rétention et vérification, puis prouver qu’une
+  clé récupérée permet la restauration. Périmètre attribué : Stockage PBS lab-pbs-n2-208
+  ; VM/sauvegardes, identité limitée et coffre de clés hors ligne fournis. Les tests
+  lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

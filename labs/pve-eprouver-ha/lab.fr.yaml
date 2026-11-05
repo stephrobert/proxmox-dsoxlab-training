@@ -1,0 +1,4 @@
+title: Éprouver la reprise du service sans double écrivain
+description: |
+  Imposer une vraie perte de nœud depuis le contrôleur indépendant, corréler
+  fencing, QEMU, HA et transactions durables, puis tester la perte de majorité.

@@ -11,7 +11,8 @@ level: l1
 description: |
   Create VM 150 on Proxmox VE with the hardware contract taught by the lesson
   (q35, OVMF, host CPU, VirtIO SCSI single, VirtIO network on vmbr0), install
-  Debian on it, make it boot from its disk with no ISO left, and serve a
+  a guest system (Debian 13 media is provided as a suggested method), make it
+  boot from its disk with no ISO left, and serve a
   witness page that a client outside the guest can read, before and after a
   reboot.
 skills:

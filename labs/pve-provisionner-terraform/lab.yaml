@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-provisionner-terraform
+title: "Provision with Terraform and measured permissions"
+level: l3
+description: |
+  Adopt the prepared VM in an explicit Terraform project using the pinned bpg provider and a least-privilege API identity. Save a real plan and state. Re-plan after applying only the intended configuration; prove the actual VM configuration matches and the saved second plan is a no-op.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://registry.terraform.io/providers/bpg/proxmox/latest/docs
+lab_type: lab
+difficulty: advanced
+estimated_time: 45m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

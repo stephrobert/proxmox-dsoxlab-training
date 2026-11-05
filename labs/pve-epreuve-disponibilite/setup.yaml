@@ -1,0 +1,9 @@
+- name: Check availability-assessment prerequisites without provisioning
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Refuse missing independent PBS, recovery target or vault
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

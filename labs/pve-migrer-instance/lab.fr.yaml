@@ -1,0 +1,5 @@
+title: Migrer une VM et un CT en mesurant l’impact client
+description: |
+  Détecter les dépendances incompatibles, employer les méthodes VM/CT
+  supportées, puis vérifier le placement, les données durables et le
+  redémarrage sur le nœud cible.

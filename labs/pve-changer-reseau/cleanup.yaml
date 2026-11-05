@@ -1,0 +1,55 @@
+---
+- name: Remove only resources allocated to pve-changer-reseau
+  hosts: lab_target
+  become: true
+  vars:
+    vmid: 206
+    vm_name: n2-changerrese
+    lab_dir: /opt/lab-proxmox/pve-changer-reseau
+  tasks:
+    - name: Require this lab's ownership manifest before cleanup
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: lab_manifest
+    - name: Refuse cleanup without the lab ownership marker
+      ansible.builtin.assert:
+        that:
+          - lab_manifest.stat.exists
+        fail_msg: 'Lab ownership manifest is absent; refusing to remove any VM or directory.'
+    - name: Read the allocated VM configuration
+      ansible.builtin.command: qm config {{ vmid }}
+      register: vm_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse to destroy a VMID not owned by this lab
+      ansible.builtin.assert:
+        that:
+          - "vm_config.rc != 0 or ('name: ' ~ vm_name) in vm_config.stdout"
+        fail_msg: 'VMID {{ vmid }} no longer matches this lab manifest; refusing cleanup.'
+    - name: Stop the named lab VM if running
+      ansible.builtin.command: qm stop {{ vmid }}
+      when: vm_config.rc == 0
+      changed_when: true
+      failed_when: false
+    - name: Remove only the assigned nftables chain if present
+      ansible.builtin.command: nft delete chain inet filter N2LAB206
+      register: chain_delete
+      changed_when: chain_delete.rc == 0
+      failed_when: false
+    - name: Remove only the persisted lab rule fragment
+      ansible.builtin.file:
+        path: /etc/nftables.d/n2lab206.nft
+        state: absent
+    - name: Remove only the bridge block owned by this network lab
+      ansible.builtin.blockinfile:
+        path: /etc/network/interfaces
+        marker: '# {mark} DSOXLAB N2 NETWORK 206'
+        state: absent
+    - name: Destroy the named lab VM and only its owned disks
+      ansible.builtin.command: qm destroy {{ vmid }} --purge 1
+      when: vm_config.rc == 0
+      changed_when: true
+    - name: Remove this lab's manifest directory only
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: absent

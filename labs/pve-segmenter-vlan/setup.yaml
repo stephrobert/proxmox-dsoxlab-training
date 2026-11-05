@@ -1,0 +1,55 @@
+---
+- name: Prepare bounded fixture for pve-segmenter-vlan
+  hosts: lab_target
+  become: true
+  vars:
+    lab_id: pve-segmenter-vlan
+    lab_dir: /opt/lab-proxmox/pve-segmenter-vlan
+    vmid: 205
+    vm_name: n2-segmentervl
+  tasks:
+    - name: Require an already-installed Proxmox VE node
+      ansible.builtin.command: pveversion --verbose
+      changed_when: false
+      register: pve_version
+      failed_when: pve_version.rc != 0 or 'pve-manager' not in pve_version.stdout
+    - name: Check for an existing ownership manifest
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: existing_manifest
+    - name: Create the lab evidence directory
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Check whether the exact allocated VM already exists
+      ansible.builtin.command: qm config {{ vmid }}
+      register: vm_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse to reuse an occupied VMID
+      ansible.builtin.assert:
+        that:
+          - "vm_config.rc != 0 or (existing_manifest.stat.exists and ('name: ' ~ vm_name) in vm_config.stdout)"
+        fail_msg: 'Allocated VMID {{ vmid }} is occupied by a different resource; stop without changing it.'
+    - name: Create an inert fixture VM only when this lab owns the VMID
+      ansible.builtin.command: >-
+        qm create {{ vmid }} --name {{ vm_name }} --memory 512 --cores 1
+        --net0 virtio,bridge=vmbr0 --onboot 0
+      when: vm_config.rc != 0
+      changed_when: true
+    - name: Write the exact resource manifest
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifest.yml"
+        owner: root
+        group: root
+        mode: '0640'
+        content: |
+          lab: pve-segmenter-vlan
+          allocated: VMID 205; isolated bridge vmbr205 and VLAN IDs 285/286; no physical uplink is assigned.
+          pve_node_required: true
+          cluster_changes: forbidden
+          physical_network_changes: forbidden
+          external_prerequisite: none beyond the pre-installed PVE node

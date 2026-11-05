@@ -11,9 +11,9 @@ testinfra avec backend ``ssh://`` et chemin de cle absolu. La liste des
 hotes (FQDN -> IP) est lue dynamiquement depuis ``meta.yml`` a la racine :
 pas de doublon a maintenir vis-a-vis de l infra.
 
-Ce catalogue n a qu un hote, ``pve.lab``, une Debian 13 NUE. C est
-l apprenant qui y installe Proxmox, par le depot pve-no-subscription : les
-labs mesurent donc le resultat de son travail, et ne le fabriquent pas.
+``pve.lab`` est la Debian 13 NUE des labs mono-nœud ; l'apprenant y installe
+Proxmox lui-même. ``pve2.lab`` et ``pve3.lab`` ne servent qu'aux scénarios
+cluster et ne sont provisionnés que sur demande explicite.
 
 Usage typique dans un test pytest+testinfra ::
 
@@ -244,6 +244,37 @@ def lab_target_host(default: str) -> str:
         TARGET_HOST = lab_target_host("pve.lab")
     """
     return os.environ.get("DSOXLAB_TARGET_HOST") or default
+
+
+def lab_target_roles(lab_root: Path, host_name: str) -> dict[str, str]:
+    """Résout les hôtes nommés par rôle sur la cible actuellement choisie."""
+    runtime = yaml.safe_load(
+        (lab_root / "lab.yaml").read_text(encoding="utf-8")
+    )["runtime"]
+    candidates = [
+        target for target in runtime.get("targets", [])
+        if target.get("host") == host_name
+    ]
+    if not candidates:
+        if runtime.get("host") == host_name:
+            return {}
+        raise RuntimeError(f"{lab_root.name} : cible {host_name} non déclarée")
+
+    requested = os.environ.get("DSOXLAB_TARGET")
+    selected = next(
+        (
+            target for target in candidates
+            if target.get("name") == (requested or runtime.get("default"))
+        ),
+        None,
+    )
+    if selected is None:
+        if requested or len(candidates) != 1:
+            raise RuntimeError(
+                f"{lab_root.name} : cible ambiguë ou inconnue pour {host_name}"
+            )
+        selected = candidates[0]
+    return dict(selected.get("roles") or {})
 
 
 # ----------------------------------------------------------------------

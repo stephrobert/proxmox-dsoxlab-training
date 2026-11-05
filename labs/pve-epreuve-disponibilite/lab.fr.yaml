@@ -1,0 +1,2 @@
+title: Épreuve de disponibilité et reprise indépendante
+description: Exploiter trois nœuds qualifiés avec réserve, imposer une vraie panne, mesurer la reprise à écrivain unique et restaurer depuis PBS secondaire sans primaire.

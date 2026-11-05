@@ -1,0 +1,10 @@
+{
+  "id": "pve-reserver-capacite", "guest_ids": [9331, 9332, 9333],
+  "storage_id": "n3-capacity", "required_sources": [],
+  "points_a_tester": [
+    {"id": "budget", "attendu": "Le calcul inclut hôtes, invités et stockage.", "methode": "Comparer le dossier aux mesures et simuler la perte du plus gros nœud."},
+    {"id": "placement", "attendu": "Les contraintes s’appliquent réellement.", "methode": "Vérifier placement de départ et après déplacement autorisé ; lire la règle effective disponible dans la version."},
+    {"id": "surcharge", "attendu": "Une demande incompatible est refusée ou reportée.", "methode": "Présenter une charge excédant la réserve et vérifier la décision ainsi que l’absence de surallocation non déclarée."},
+    {"id": "preuve", "attendu": "Le rapport distingue hypothèse et mesure.", "methode": "Exiger les budgets, les observations sous charge bornée et les limites matérielles du lab."}
+  ]
+}

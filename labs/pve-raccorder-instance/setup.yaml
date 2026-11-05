@@ -136,6 +136,28 @@
       changed_when: demarrage.rc == 0
       failed_when: demarrage.rc != 0 and 'already running' not in demarrage.stderr
 
+    - name: Garder l'identité initiale de la VM et ses tâches de création
+      ansible.builtin.shell:
+        cmd: |
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          def read(args):
+              return subprocess.check_output(args, text=True).strip()
+          target = Path("{{ lab_dir }}/identite.json")
+          if not target.exists():
+              config = dict(line.split(":", 1) for line in read(["qm", "config", "160"]).splitlines() if ":" in line)
+              identity = config.get("smbios1", "").strip()
+              if not identity:
+                  raise SystemExit("VM identity missing")
+              node = read(["hostname", "--short"])
+              tasks = json.loads(read(["pvesh", "get", f"/nodes/{node}/tasks", "--vmid", "160", "--typefilter", "qmcreate", "--limit", "500", "--output-format", "json"]))
+              target.write_text(json.dumps({"smbios1": identity, "creation_tasks": [t["upid"] for t in tasks]}))
+              target.chmod(0o600)
+          PY
+        executable: /bin/bash
+      changed_when: false
+
     - name: Écrire le manifeste du lab
       ansible.builtin.copy:
         dest: "{{ lab_dir }}/manifeste.md"

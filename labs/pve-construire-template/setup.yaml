@@ -1,0 +1,122 @@
+---
+- name: Préparer les ressources attribuées à pve-construire-template
+  hosts: lab_target
+  become: true
+  vars:
+    lab_dir: /opt/lab-proxmox/pve-construire-template
+    image_name: debian-13-genericcloud-amd64.qcow2
+    image_path: /var/lib/vz/template/cache/debian-13-genericcloud-amd64.qcow2
+    vmids: [197, 198, 199]
+  tasks:
+    - name: Disposer d'un nœud Proxmox VE prêt
+      ansible.builtin.include_tasks: ../../shared/noeud-proxmox.yml
+
+    - name: Réserver les contenus nécessaires sur le stockage local
+      ansible.builtin.command:
+        argv: [pvesm, set, local, --content, iso,vztmpl,backup,images,rootdir,snippets]
+      changed_when: true
+
+    - name: Créer le répertoire et les clés client propres au lab
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+      loop:
+        - "{{ lab_dir }}"
+        - "{{ lab_dir }}/keys"
+
+    - name: Générer une identité SSH dédiée au clone applicatif
+      ansible.builtin.command:
+        argv:
+          - ssh-keygen
+          - -q
+          - -t
+          - ed25519
+          - -N
+          - ""
+          - -C
+          - dsoxlab-template-clone-a
+          - -f
+          - "{{ lab_dir }}/keys/clone-a"
+      args:
+        creates: "{{ lab_dir }}/keys/clone-a"
+      changed_when: true
+
+    - name: Générer une identité SSH dédiée au clone de secours
+      ansible.builtin.command:
+        argv:
+          - ssh-keygen
+          - -q
+          - -t
+          - ed25519
+          - -N
+          - ""
+          - -C
+          - dsoxlab-template-clone-b
+          - -f
+          - "{{ lab_dir }}/keys/clone-b"
+      args:
+        creates: "{{ lab_dir }}/keys/clone-b"
+      changed_when: true
+
+    - name: Vérifier que les VMID réservés sont libres
+      ansible.builtin.command:
+        argv: [qm, config, "{{ item }}"]
+      loop: "{{ vmids }}"
+      register: vmid_checks
+      changed_when: false
+      failed_when: false
+
+    - name: Refuser toute collision avec des VM déjà présentes
+      ansible.builtin.assert:
+        that:
+          - item.rc != 0
+        fail_msg: "La VMID {{ item.item }} est déjà utilisée ; aucune ressource existante ne sera remplacée."
+      loop: "{{ vmid_checks.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Lire l'empreinte publiée de l'image Debian 13
+      ansible.builtin.uri:
+        url: https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS
+        return_content: true
+      register: checksums
+      retries: 3
+      delay: 10
+      until: checksums is succeeded
+
+    - name: Extraire l'empreinte de l'image attribuée
+      ansible.builtin.set_fact:
+        image_sha512: "{{ (checksums.content.splitlines() | select('search', image_name ~ '$') | first).split()[0] }}"
+
+    - name: Télécharger l'image cloud avec sa somme vérifiée
+      ansible.builtin.get_url:
+        url: "https://cloud.debian.org/images/cloud/trixie/latest/{{ image_name }}"
+        dest: "{{ image_path }}"
+        checksum: "sha512:{{ image_sha512 }}"
+        mode: "0644"
+      retries: 3
+      delay: 10
+      register: image
+      until: image is succeeded
+
+    - name: Écrire le manifeste des ressources et clés attribuées
+      ansible.builtin.copy:
+        dest: "{{ lab_dir }}/manifeste.md"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Ressources attribuées — template cloud-init
+
+          - Template : VMID 197, recette `debian13-cloud-v1`
+          - Clones : VMID 198 (`clone-a`) et 199 (`clone-b`)
+          - Image : `{{ image_path }}`, SHA-512 `{{ image_sha512 }}`
+          - Clé publique clone-a : `{{ lab_dir }}/keys/clone-a.pub`
+          - Clé privée clone-a (secret local, ne pas copier dans les preuves) : `{{ lab_dir }}/keys/clone-a`
+          - Clé publique clone-b : `{{ lab_dir }}/keys/clone-b.pub`
+          - Clé privée clone-b (secret local, ne pas copier dans les preuves) : `{{ lab_dir }}/keys/clone-b`
+          - Réseau : DHCP sur `vmbr0`
+          - Aucun template ni clone n'est créé par le setup ; l'apprenant construit la recette.

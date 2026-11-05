@@ -1,0 +1,3 @@
+title: "Livrer une recette reproductible et transférable"
+description: |
+  À partir d’un template Debian cloud-init préexistant et autorisé, créez la VM du lab, configurez un service HTTP avec nonce, puis rejouez le provisioning. Créez et restaurez une sauvegarde Proxmox vers une seconde VM du lab, vérifiez le même service et ne nettoyez que les ressources balisées pour ce lab.

@@ -1,0 +1,86 @@
+---
+- name: Remove only resources allocated to pve-deleguer-acces
+  hosts: lab_target
+  become: true
+  vars:
+    vmid: 201
+    vm_name: n2-delegueracc
+    lab_dir: /opt/lab-proxmox/pve-deleguer-acces
+  tasks:
+    - name: Require this lab's ownership manifest before cleanup
+      ansible.builtin.stat:
+        path: "{{ lab_dir }}/manifest.yml"
+      register: lab_manifest
+    - name: Refuse cleanup without the lab ownership marker
+      ansible.builtin.assert:
+        that:
+          - lab_manifest.stat.exists
+        fail_msg: 'Lab ownership manifest is absent; refusing to remove any VM or directory.'
+    - name: Read the allocated VM configuration
+      ansible.builtin.command: qm config {{ vmid }}
+      register: vm_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse to destroy a VMID not owned by this lab
+      ansible.builtin.assert:
+        that:
+          - "vm_config.rc != 0 or ('name: ' ~ vm_name) in vm_config.stdout"
+        fail_msg: 'VMID {{ vmid }} no longer matches this lab manifest; refusing cleanup.'
+    - name: Stop the named lab VM if running
+      ansible.builtin.command: qm stop {{ vmid }}
+      when: vm_config.rc == 0
+      changed_when: true
+      failed_when: false
+    - name: Destroy the named lab VM and only its owned disks
+      ansible.builtin.command: qm destroy {{ vmid }} --purge 1
+      when: vm_config.rc == 0
+      changed_when: true
+    - name: Read the neighbouring sentinel configuration
+      ansible.builtin.command: qm config 216
+      register: voisin_config
+      changed_when: false
+      failed_when: false
+    - name: Refuse cleanup if the neighbouring VMID is no longer owned
+      ansible.builtin.assert:
+        that:
+          - voisin_config.rc != 0 or 'name: n2-voisin' in voisin_config.stdout
+        fail_msg: 'VMID 216 no longer matches the lab sentinel; refusing cleanup.'
+    - name: Stop the neighbouring sentinel if running
+      ansible.builtin.command: qm stop 216
+      when: voisin_config.rc == 0
+      changed_when: true
+      failed_when: false
+    - name: Destroy the neighbouring sentinel only
+      ansible.builtin.command: qm destroy 216 --purge 1
+      when: voisin_config.rc == 0
+      changed_when: true
+    - name: Remove only ACL entries for the named lab accounts and pool paths
+      ansible.builtin.command: >-
+        pveum acl delete {{ item.path }} --users {{ item.user }}
+      loop:
+        - { path: /pool/lab-n2-deleguer, user: equipe-n2@pve }
+        - { path: /pool/lab-n2-voisin, user: equipe-n2@pve }
+        - { path: /, user: equipe-n2@pve }
+        - { path: /, user: auditeur-n2@pve }
+        - { path: /, user: secours-n2@pve }
+      changed_when: true
+      failed_when: false
+    - name: Remove the exact test identities
+      ansible.builtin.command: pveum user delete {{ item }}
+      loop:
+        - equipe-n2@pve
+        - auditeur-n2@pve
+        - secours-n2@pve
+      changed_when: true
+      failed_when: false
+    - name: Remove the two pools created by this lab
+      ansible.builtin.command: pveum pool delete {{ item }}
+      loop:
+        - lab-n2-deleguer
+        - lab-n2-voisin
+      changed_when: true
+      failed_when: false
+    - name: Remove this lab's manifest directory only
+      ansible.builtin.file:
+        path: "{{ lab_dir }}"
+        state: absent

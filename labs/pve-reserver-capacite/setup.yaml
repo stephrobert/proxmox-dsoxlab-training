@@ -1,0 +1,9 @@
+- name: Check prepared capacity exercise without provisioning
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Require real cluster, allocated guests and independent client
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

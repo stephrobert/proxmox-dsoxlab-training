@@ -1,0 +1,10 @@
+{
+  "id": "pve-maintenir-cluster", "guest_ids": [9361],
+  "storage_id": "n3-maintenance", "required_sources": [],
+  "points_a_tester": [
+    {"id": "evacuation", "attendu": "Les charges migrables sont évacuées et les exceptions traitées.", "methode": "Comparer placement avant intervention et règle de maintenance ; refuser une charge oubliée sur le nœud arrêté."},
+    {"id": "quorum", "attendu": "La majorité et les ressources de reprise sont préservées.", "methode": "Observer votes et capacité pendant chaque étape ; une seconde maintenance concurrente doit être empêchée."},
+    {"id": "reintegration", "attendu": "Le nœud revient avec les bonnes identités et ressources.", "methode": "Contrôler membres, versions compatibles, réseaux, accès stockage et tâches HA."},
+    {"id": "recette", "attendu": "Le service et les sauvegardes repassent leur recette.", "methode": "Exécuter transaction, backup et lecture d’un marqueur restauré après la maintenance."}
+  ]
+}

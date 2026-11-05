@@ -1,0 +1,9 @@
+- name: Restore only owned primary-site isolation
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore firewall before removing evidence; preserve PBS data and rescue keys
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

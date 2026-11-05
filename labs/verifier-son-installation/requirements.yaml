@@ -1,0 +1,55 @@
+requirements:
+- id: '1'
+  test: test_proxmox_est_installe
+  arguments: []
+  en: Install Proxmox VE so pveversion reports pve-manager.
+  fr: Installez Proxmox VE pour que pveversion annonce pve-manager.
+- id: '2'
+  test: test_la_version_est_bien_une_9
+  arguments: []
+  en: Use Proxmox VE version 9 or later.
+  fr: Utilisez Proxmox VE en version 9 ou ultérieure.
+- id: '3'
+  test: test_un_service_proxmox_est_actif
+  arguments:
+  - pve-cluster
+  en: Keep service pve-cluster active.
+  fr: Gardez le service pve-cluster actif.
+- id: '4'
+  test: test_un_service_proxmox_est_actif
+  arguments:
+  - pvedaemon
+  en: Keep service pvedaemon active.
+  fr: Gardez le service pvedaemon actif.
+- id: '5'
+  test: test_un_service_proxmox_est_actif
+  arguments:
+  - pveproxy
+  en: Keep service pveproxy active.
+  fr: Gardez le service pveproxy actif.
+- id: '6'
+  test: test_l_interface_web_repond
+  arguments: []
+  en: Serve an HTTP 200 response over HTTPS on port 8006.
+  fr: Servez une réponse HTTP 200 en HTTPS sur le port 8006.
+- id: '7'
+  test: test_le_port_web_appartient_a_pveproxy
+  arguments: []
+  en: Make pveproxy own the listener on port 8006.
+  fr: Faites tenir le port 8006 par pveproxy.
+- id: '8'
+  test: test_le_pont_porte_l_adresse_du_serveur
+  arguments: []
+  en: Place the server IPv4 address, resolved from its hostname, on vmbr0.
+  fr: Placez sur vmbr0 l’adresse IPv4 du serveur, résolue depuis son nom d’hôte.
+- id: '9'
+  test: test_le_depot_sans_abonnement_est_actif
+  arguments: []
+  en: Enable a complete pve-no-subscription APT repository entry.
+  fr: Activez une entrée APT complète du dépôt pve-no-subscription.
+- id: '10'
+  test: test_les_index_apt_se_telechargent
+  arguments: []
+  en: Download all APT indexes without ignoring a repository download error.
+  fr: Téléchargez tous les index APT sans ignorer une erreur de téléchargement d’un
+    dépôt.

@@ -5,6 +5,7 @@ title: "Créer une VM KVM et vérifier que son service répond"
 description: |
   Créer la VM 150 dans Proxmox VE avec le contrat matériel enseigné par la
   leçon (q35, OVMF, CPU host, VirtIO SCSI single, carte VirtIO sur vmbr0), y
-  installer Debian, la faire démarrer sur son disque sans ISO restante, et
+  installer un système invité (le média Debian 13 est une méthode conseillée),
+  la faire démarrer sur son disque sans ISO restante, et
   servir une page témoin qu'un client extérieur à l'invité lit avant et après
   un redémarrage.

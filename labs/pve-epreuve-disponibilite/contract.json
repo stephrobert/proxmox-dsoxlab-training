@@ -1,0 +1,11 @@
+{
+  "id": "pve-epreuve-disponibilite", "guest_ids": [9381],
+  "storage_id": "n3-availability", "required_sources": ["pbs_primary", "pbs_secondary", "recovery", "vault"],
+  "points_a_tester": [
+    {"id": "architecture", "attendu": "Quorum, stockage et capacité résiduelle répondent au scénario.", "methode": "Contrôler trois membres, versions compatibles, placement et marge après perte d’un nœud ; vérifier que shared ne masque pas un disque local."},
+    {"id": "bascule", "attendu": "Le service revient dans le délai convenu sans double écrivain.", "methode": "Imposer la panne qualifiée, collecter watchdog/fencing et états HA, observer les transactions de l’extérieur et prouver l’absence d’écritures concurrentes sur les deux côtés."},
+    {"id": "donnees", "attendu": "La perte éventuelle de données correspond au modèle annoncé.", "methode": "Comparer la dernière réplication et les transactions acquittées puis restaurées ; expliquer l’écart entre migration, réplication et sauvegarde."},
+    {"id": "maintenance", "attendu": "Le retour du nœud et une maintenance planifiée conservent un cluster sain.", "methode": "Rejoindre ou rétablir le nœud selon le runbook, vérifier quorum, ressources, stockage et service ; une migration incompatible doit être refusée proprement."},
+    {"id": "reprise", "attendu": "La copie secondaire permet de reprendre sans dépendre du site primaire.", "methode": "Bloquer les accès au primaire, restaurer avec clé extérieure sur cible vide et contrôler données, service et objectifs ; noter les dépendances hors site nécessaires."}
+  ]
+}

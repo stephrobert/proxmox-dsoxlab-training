@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-deployer-sdn
+title: "Build an SDN network for the workload"
+level: l3
+description: |
+  On the existing three-node proxmox-cluster, create and apply the dedicated VNet, attach the two prepared guests, prove guest-to-guest communication, migrate one guest to another configured node, and repeat the reachability test. Inspect and correct a mismatched MTU or unapplied SDN state when present.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://pve.proxmox.com/pve-docs/chapter-pvesdn.html
+lab_type: lab
+difficulty: advanced
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles:
+        node2: pve02.lab
+        node3: pve03.lab
+      label_en: "Existing on-demand three-node Proxmox cluster; no nodes are provisioned by this lab"
+      label_fr: "Cluster Proxmox à trois nœuds, existant et à la demande ; ce lab ne provisionne aucun nœud"
+  default: proxmox-cluster
+validation:
+  functional: true
+  persistence_after_reboot: false

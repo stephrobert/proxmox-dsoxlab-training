@@ -1,0 +1,64 @@
+---
+# Guarded, bounded fixture only. This playbook never installs Proxmox VE.
+- name: Préparer pve-provisionner-terraform
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Vérifier une installation PVE préexistante
+      ansible.builtin.command: pveversion --verbose
+      register: pve_version
+      changed_when: false
+      failed_when: false
+    - name: Bloquer clairement sur Debian nu ou sans PVE
+      ansible.builtin.assert:
+        that: pve_version.rc == 0
+        fail_msg: "BLOCKED: an already-installed Proxmox VE node is required; this lab never installs PVE."
+
+    - name: Vérifier Terraform et son absence d’installation automatique
+      ansible.builtin.command: terraform version -json
+      register: terraform_tool
+      changed_when: false
+      failed_when: false
+    - name: Bloquer sans Terraform
+      ansible.builtin.assert:
+        that: terraform_tool.rc == 0
+        fail_msg: "BLOCKED: install/configure Terraform on the lab controller; setup does not install it."
+
+    - name: Vérifier le template versionné et approuvé
+      ansible.builtin.command: qm config 9000
+      register: template_config
+      changed_when: false
+      failed_when: false
+    - name: Refuser un template absent ou ambigu
+      ansible.builtin.assert:
+        that:
+          - template_config.rc == 0
+          - "'template: 1' in template_config.stdout"
+          - "'name: debian-13-cloud-template' in template_config.stdout"
+          - "'agent: 1' in template_config.stdout"
+        fail_msg: "BLOCKED: VMID 9000 must be the approved, versioned Debian 13 cloud template with QEMU agent; no first-match template selection is allowed."
+
+    - name: Refuser tout VMID déjà utilisé
+      ansible.builtin.command: "qm status {{ item }}"
+      loop: [1737]
+      register: vmid_checks
+      changed_when: false
+      failed_when: false
+    - name: Bloquer en cas de collision de VMID
+      ansible.builtin.assert:
+        that: "vmid_checks.results | selectattr('rc', 'equalto', 0) | list | length == 0"
+        fail_msg: "BLOCKED: a reserved lab VMID is already in use; cleanup never deletes pre-existing VMs."
+    - name: Créer le répertoire dédié
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-provisionner-terraform
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Écrire le manifeste borné
+      ansible.builtin.copy:
+        dest: /opt/lab-proxmox/pve-provisionner-terraform/manifest.json
+        owner: root
+        group: root
+        mode: '0640'
+        content: '{{ {"lab": "pve-provisionner-terraform", "vmids": [1737], "template_vmid": 9000} | to_json }}'

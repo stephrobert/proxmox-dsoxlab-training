@@ -1,0 +1,9 @@
+- name: Require prepared disposable HA cluster and external controls
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Check explicit allocation; do not provision or claim HA readiness
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

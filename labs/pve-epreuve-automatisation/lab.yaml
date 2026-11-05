@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-epreuve-automatisation
+title: "Deliver a reproducible platform through API and IaC"
+level: l3
+description: |
+  Complete the N4 practical assessment: use the API, Terraform state/plan, a refreshed Ansible inventory, idempotent Ansible operations and a bounded delivery recipe. Prove the real guest service and a restorable backup; repeat without recreating or restarting the guest.
+skills:
+  - proxmox
+  - automation
+  - operations
+distros:
+  - debian13
+doc_url: https://pve.proxmox.com/pve-docs/
+lab_type: lab
+difficulty: advanced
+estimated_time: 75m
+runtime:
+  type: vm
+  targets:
+    - name: pve
+      host: pve.lab
+      label_en: "Existing Proxmox VE node; feature prerequisites are checked, never installed"
+      label_fr: "Nœud Proxmox VE existant ; les prérequis sont vérifiés, jamais installés"
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

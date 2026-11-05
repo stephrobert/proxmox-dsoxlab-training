@@ -1,0 +1,17 @@
+id: pve-maintenir-cluster
+title: Maintain a node while preserving the service contract
+level: l3
+description: Evacuate allocated loads, prevent concurrent maintenance, observe quorum/reserve and verify reintegration, business data and restored backup.
+skills: [proxmox, maintenance, backup, quorum]
+distros: [debian13]
+doc_url: https://pve.proxmox.com/pve-docs/
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: true}

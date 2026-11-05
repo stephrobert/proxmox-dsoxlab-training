@@ -1,0 +1,16 @@
+id: pve-reprendre-hors-site
+title: Reprendre depuis un PBS secondaire sans dépendance primaire
+level: l3
+description: Vérifier manifeste/synchronisation secondaire, bloquer le primaire, restaurer avec clés de secours extérieures et mesurer RPO/RTO durables.
+skills: [proxmox, pbs, disaster-recovery, rpo, rto]
+distros: [debian13]
+lab_type: lab
+difficulty: advanced
+runtime:
+  type: vm
+  default: proxmox-cluster
+  targets:
+    - name: proxmox-cluster
+      host: pve01.lab
+      roles: {node2: pve02.lab, node3: pve03.lab}
+validation: {functional: true, persistence_after_reboot: false}

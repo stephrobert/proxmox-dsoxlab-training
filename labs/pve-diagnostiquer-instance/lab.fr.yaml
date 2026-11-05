@@ -1,0 +1,5 @@
+title: Diagnostiquer une VM indisponible
+description: 'Rétablir une instance indisponible en identifiant la cause et en conservant
+  ses données et protections. Périmètre attribué : VM jetable préinstallée 211 nommée
+  n2-diagnostique avec disque, agent invité et pare-feu ; panne unique sur vmbr999.
+  Les tests lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

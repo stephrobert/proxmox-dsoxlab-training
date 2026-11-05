@@ -1,0 +1,76 @@
+---
+# Guarded, bounded fixture only. This playbook never installs Proxmox VE.
+- name: Préparer pve-operer-ansible
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Vérifier une installation PVE préexistante
+      ansible.builtin.command: pveversion --verbose
+      register: pve_version
+      changed_when: false
+      failed_when: false
+    - name: Bloquer clairement sur Debian nu ou sans PVE
+      ansible.builtin.assert:
+        that: pve_version.rc == 0
+        fail_msg: "BLOCKED: an already-installed Proxmox VE node is required; this lab never installs PVE."
+
+    - name: Vérifier le client Ansible
+      ansible.builtin.command: ansible-playbook --version
+      register: ansible_tool
+      changed_when: false
+      failed_when: false
+    - name: Bloquer sans Ansible
+      ansible.builtin.assert:
+        that: ansible_tool.rc == 0
+        fail_msg: "BLOCKED: install/configure Ansible on the lab controller; setup does not install it."
+
+    - name: Vérifier le pont et le stockage local requis
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ip link show vmbr0
+        - pvesm status --storage local
+      register: local_capabilities
+      changed_when: false
+      failed_when: false
+    - name: Bloquer si le pont ou le stockage fixture manque
+      ansible.builtin.assert:
+        that: local_capabilities.results | map(attribute='rc') | select('equalto', 0) | list | length == 2
+        fail_msg: "BLOCKED: vmbr0 and active local storage are required; setup will not create or alter storage."
+
+    - name: Refuser tout VMID déjà utilisé
+      ansible.builtin.command: "qm status {{ item }}"
+      loop: [1741, 1742]
+      register: vmid_checks
+      changed_when: false
+      failed_when: false
+    - name: Bloquer en cas de collision de VMID
+      ansible.builtin.assert:
+        that: "vmid_checks.results | selectattr('rc', 'equalto', 0) | list | length == 0"
+        fail_msg: "BLOCKED: a reserved lab VMID is already in use; cleanup never deletes pre-existing VMs."
+    - name: Créer uniquement les VM témoins attribuées à ce lab
+      ansible.builtin.command: >-
+        qm create {{ item }} --name pve-operer-ansible-{{ item }} --ostype l26
+        --cores 1 --memory 512 --scsihw virtio-scsi-single
+        --scsi0 local:1,format=qcow2 --net0 virtio,bridge=vmbr0
+        --tags pve-operer-ansible
+      loop: [1741, 1742]
+      changed_when: true
+    - name: Démarrer la cible et la sentinelle pour l’exercice d’arrêt
+      ansible.builtin.command: "qm start {{ item }}"
+      loop: [1741, 1742]
+      changed_when: true
+
+    - name: Créer le répertoire dédié
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-operer-ansible
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+    - name: Écrire le manifeste borné
+      ansible.builtin.copy:
+        dest: /opt/lab-proxmox/pve-operer-ansible/manifest.json
+        owner: root
+        group: root
+        mode: '0640'
+        content: '{{ {"lab": "pve-operer-ansible", "vmids": [1741, 1742], "template_vmid": 9000} | to_json }}'

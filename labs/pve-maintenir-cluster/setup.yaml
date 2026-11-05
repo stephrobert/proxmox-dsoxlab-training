@@ -1,0 +1,9 @@
+- name: Require stable cluster, allocated maintenance guest and approved change
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Capture baseline from independent controller without provisioning
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", prepare]
+      changed_when: false

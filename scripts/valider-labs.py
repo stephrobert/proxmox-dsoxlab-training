@@ -92,8 +92,11 @@ class Verdict:
 
 def _dsoxlab(*args: str, timeout: int = 900) -> subprocess.CompletedProcess[str]:
     env = dict(os.environ, LAB_HOME=str(RACINE))
+    commande = ["dsoxlab", *args]
+    if args and args[0] == "clean" and "--yes" not in args:
+        commande.append("--yes")
     return subprocess.run(
-        ["dsoxlab", *args],
+        commande,
         cwd=RACINE,
         env=env,
         input="y\n",

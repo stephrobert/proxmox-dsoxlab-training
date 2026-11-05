@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
+id: pve-diagnostiquer-instance
+title: Diagnose an unavailable VM
+level: l2
+description: 'Restore an unavailable instance by identifying its cause while preserving
+  data and protections. Assigned scope: Pre-provisioned disposable VMID 211 named
+  n2-diagnostique with its disk, guest agent, and firewall; the only injected fault
+  is net0 on vmbr999. Tests inspect native Proxmox state; no Proxmox or cluster provisioning
+  is performed.'
+skills:
+- proxmox
+- operations
+- security
+distros: [debian13]
+doc_url: https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/
+lab_type: lab
+difficulty: intermediate
+estimated_time: 60m
+runtime:
+  type: vm
+  targets:
+  - name: pve
+    host: pve.lab
+    label_en: Pre-installed Proxmox VE target; no cluster changes
+    label_fr: Cible Proxmox VE préinstallée ; aucune modification du cluster
+  default: pve
+validation:
+  functional: true
+  persistence_after_reboot: false

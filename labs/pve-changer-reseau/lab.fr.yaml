@@ -1,0 +1,5 @@
+title: Router, traduire et modifier le réseau sans se couper
+description: 'Mettre en place les flux sortants et une publication contrôlée, puis
+  effectuer un changement réseau réversible. Périmètre attribué : VMID 206 ; pont
+  isolé vmbr206 ; chaîne nftables N2LAB206 ; aucun uplink physique ni route par défaut.
+  Les tests lisent l’état Proxmox natif ; aucun Proxmox ni cluster n’est installé/préparé.'

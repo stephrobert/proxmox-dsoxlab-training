@@ -1,0 +1,74 @@
+---
+# Scoped cleanup: only resources assigned to pve-deployer-sdn; never remove shared prerequisites.
+- name: Nettoyer pve-deployer-sdn
+  hosts: lab_target
+  become: true
+  tasks:
+    - name: Vérifier le manifeste d’ownership du lab
+      ansible.builtin.stat:
+        path: /opt/lab-proxmox/pve-deployer-sdn/manifest.json
+      register: manifest_file
+    - name: Lire le manifeste d’ownership s’il existe
+      ansible.builtin.slurp:
+        src: /opt/lab-proxmox/pve-deployer-sdn/manifest.json
+      register: manifest_raw
+      when: manifest_file.stat.exists
+    - name: Valider le manifeste avant toute suppression
+      ansible.builtin.assert:
+        that:
+          - (manifest_raw.content | b64decode | from_json).lab == 'pve-deployer-sdn'
+          - (manifest_raw.content | b64decode | from_json).vmids == [1790, 1791]
+          - (manifest_raw.content | b64decode | from_json).vnet == 'n4-lab'
+        fail_msg: "BLOCKED: cleanup manifest does not prove ownership of the exact lab resources."
+      when: manifest_file.stat.exists
+    - name: Lire l’inventaire réel des deux VMID réservés
+      ansible.builtin.command: pvesh get /cluster/resources --type vm --output-format json
+      register: ressources
+      changed_when: false
+      when: manifest_file.stat.exists
+    - name: Initialiser la liste exacte des invités gérés par le lab
+      ansible.builtin.set_fact:
+        vm_du_lab: >-
+          {{
+            (ressources.stdout | from_json)
+            if manifest_file.stat.exists else []
+          }}
+    - name: Filtrer les invités par VMID et nom réservé
+      ansible.builtin.set_fact:
+        vm_du_lab: >-
+          {{
+            vm_du_lab
+            | selectattr('vmid', 'in', [1790, 1791])
+            | selectattr('name', 'defined')
+            | selectattr('name', 'match', '^pve-deployer-sdn-(1790|1791)$')
+            | list
+          }}
+    - name: Arrêter uniquement les invités nommés du lab
+      ansible.builtin.command: >-
+        pvesh create /nodes/{{ item.node }}/qemu/{{ item.vmid }}/status/stop --timeout 30
+      loop: "{{ vm_du_lab }}"
+      register: stop_guest
+      changed_when: stop_guest.rc == 0
+      failed_when: false
+      when: manifest_file.stat.exists
+    - name: Supprimer uniquement les invités nommés du lab
+      ansible.builtin.command: >-
+        pvesh delete /nodes/{{ item.node }}/qemu/{{ item.vmid }}
+        --purge 1 --destroy-unreferenced-disks 1
+      loop: "{{ vm_du_lab }}"
+      register: destroy_guest
+      changed_when: destroy_guest.rc == 0
+      failed_when: destroy_guest.rc != 0
+      when: manifest_file.stat.exists
+
+    - name: Retirer uniquement le VNet dédié s’il existe
+      ansible.builtin.command: pvesh delete /cluster/sdn/vnets/n4-lab
+      register: retrait_vnet
+      changed_when: retrait_vnet.rc == 0
+      failed_when: false
+      when: manifest_file.stat.exists
+
+    - name: Retirer les seuls fichiers du lab
+      ansible.builtin.file:
+        path: /opt/lab-proxmox/pve-deployer-sdn
+        state: absent

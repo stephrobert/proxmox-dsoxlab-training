@@ -1,0 +1,9 @@
+- name: Restore only this maintenance controller's actions
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Restore before removing evidence; preserve cluster and backups
+      ansible.builtin.command:
+        argv: [timeout, "600", python3, "{{ playbook_dir }}/tools/controller.py", cleanup]
+      changed_when: true

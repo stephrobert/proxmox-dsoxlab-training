@@ -1,19 +1,17 @@
-# Challenge : rebrancher une VM sur le bon pont
+# pve-raccorder-instance
 
-Vous travaillez sur `pve.lab`. Le manifeste est dans
-`/opt/lab-proxmox/pve-raccorder-instance/manifeste.md`.
+Réparez le raccordement réseau de la VM 160 fournie. Conservez son identité de VM et son disque ; la page de session seule ne prouve pas cette identité.
 
-## Ce qui est attendu
+## Exigences notées
 
-1. La carte `net0` de la VM 160 est sur `vmbr0`, et `tap160i0` est un port
-   effectif de ce pont.
-2. `http://10.10.113.160:8080/` sert la ligne témoin de la session.
-3. Le pont isolé `vmbr9` n'a reçu aucun port physique, et la VM n'a pas été
-   recréée.
-4. Après un redémarrage de la VM et un `ifreload -a` du nœud, la page revient.
+1. Rattachez net0 de la VM 160 au pont exact vmbr0.
+2. Faites de l’interface exacte tap160i0 un port effectif de vmbr0.
+3. Servez la ligne témoin exacte de la session à l’adresse et au port du manifeste, accessible depuis le nœud.
+4. Gardez les interfaces physiques hors du pont isolé vmbr9.
+5. Préservez l’identité SMBIOS de la VM 160 sans déclencher de nouvelle tâche de création de cette VM.
+6. Préservez la joignabilité après un arrêt propre et un démarrage de la VM 160.
+7. Préservez la joignabilité après le rechargement réussi du réseau du nœud par l’évaluateur.
 
-## Ce qui est prouvé
+Les contrôles de persistance effectuent un arrêt propre puis un démarrage et constatent les deux états. Les lectures impossibles refusent la mesure. Les contrôles de préservation ne sont comptés qu’une fois le rapport présent, le réseau rétabli ou l’agent joignable, selon le lab.
 
-Les tests lisent la configuration de la VM et les ports effectifs des ponts,
-interrogent le service depuis le nœud, puis redémarrent l'invité et rechargent
-le réseau du nœud avant de l'interroger de nouveau.
+Pour vérifier l’origine de la page, l’évaluateur désactive temporairement l’interface virtuelle de l’invité, constate que le service devient inaccessible, puis restaure l’interface. Il ne modifie pas l’interface de gestion du nœud.

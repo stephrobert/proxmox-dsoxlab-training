@@ -1,0 +1,4 @@
+title: Qualifier le stockage partagé et ses limites
+description: |
+  Vérifier l’identité réelle du volume NFS, les permissions, le comportement
+  pendant une panne d’E/S et la reprise durable entre les trois nœuds.
