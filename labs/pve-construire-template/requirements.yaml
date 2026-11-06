@@ -1,0 +1,281 @@
+requirements:
+- id: pve-construire-template-01
+  test: test_le_marqueur_de_propriete
+  arguments:
+  - 197
+  en: Set VM 197 description to dsoxlab-lab=pve-construire-template.
+  fr: Donnez à la VM 197 la description dsoxlab-lab=pve-construire-template.
+- id: pve-construire-template-02
+  test: test_le_marqueur_de_propriete
+  arguments:
+  - 198
+  en: Set VM 198 description to dsoxlab-lab=pve-construire-template.
+  fr: Donnez à la VM 198 la description dsoxlab-lab=pve-construire-template.
+- id: pve-construire-template-03
+  test: test_le_marqueur_de_propriete
+  arguments:
+  - 199
+  en: Set VM 199 description to dsoxlab-lab=pve-construire-template.
+  fr: Donnez à la VM 199 la description dsoxlab-lab=pve-construire-template.
+- id: pve-construire-template-04
+  test: test_le_template_est_converti
+  arguments: []
+  en: Convert VM 197 into a PVE template.
+  fr: Convertissez la VM 197 en template PVE.
+- id: pve-construire-template-05
+  test: test_la_recette_est_versionnee
+  arguments: []
+  en: Name template 197 debian13-cloud-v1.
+  fr: Nommez le template 197 debian13-cloud-v1.
+- id: pve-construire-template-06
+  test: test_le_template_est_arrete
+  arguments: []
+  en: Keep template 197 stopped.
+  fr: Gardez le template 197 arrêté.
+- id: pve-construire-template-07
+  test: test_le_disque_cloud_init_est_present
+  arguments: []
+  en: Attach a cloud-init drive to template 197 as ide2.
+  fr: Raccordez un disque cloud-init au template 197 sur ide2.
+- id: pve-construire-template-08
+  test: test_le_disque_correspond_a_l_image_verifiee
+  arguments: []
+  en: Import the verified manifest image as scsi0 without booting or modifying it before conversion.
+  fr: Importez l'image vérifiée du manifeste sur scsi0 sans la démarrer ni la modifier avant conversion.
+- id: pve-construire-template-09
+  test: test_la_recette_vendor_est_transmise
+  arguments: []
+  en: Attach the supplied cloud-init vendor snippet to template 197 so its clones inherit it.
+  fr: Raccordez le snippet vendor cloud-init fourni au template 197 pour que ses clones en héritent.
+- id: pve-construire-template-10
+  test: test_le_clone_porte_son_nom
+  arguments:
+  - 198
+  - clone-a
+  en: Name VM 198 clone-a.
+  fr: Nommez la VM 198 clone-a.
+- id: pve-construire-template-11
+  test: test_le_clone_a_son_adresse
+  arguments:
+  - 198
+  - clone-a
+  en: Assign 10.10.113.198/24 through cloud-init to clone-a.
+  fr: Attribuez 10.10.113.198/24 par cloud-init à clone-a.
+- id: pve-construire-template-12
+  test: test_la_cle_autorisee_est_propre_au_clone
+  arguments:
+  - 198
+  - clone-a
+  en: Configure only the supplied clone-a public key as the cloud-init key of VM 198.
+  fr: Configurez uniquement la clé publique fournie pour clone-a comme clé cloud-init de la VM 198.
+- id: pve-construire-template-13
+  test: test_le_clone_accepte_sa_cle
+  arguments:
+  - 198
+  - clone-a
+  en: Allow the assigned clone-a key to log in to VM 198 as debian.
+  fr: Permettez à la clé attribuée à clone-a de se connecter à la VM 198 comme debian.
+- id: pve-construire-template-14
+  test: test_le_clone_refuse_l_autre_cle
+  arguments:
+  - 198
+  - clone-a
+  en: Refuse the other clone key when authenticating to clone-a.
+  fr: Refusez la clé de l’autre clone lors de l’authentification sur clone-a.
+- id: pve-construire-template-15
+  test: test_le_nom_invite_est_personnalise
+  arguments:
+  - 198
+  - clone-a
+  en: Make the guest hostname of VM 198 equal clone-a.
+  fr: Donnez au système invité de la VM 198 le nom clone-a.
+- id: pve-construire-template-16
+  test: test_cloud_init_est_termine
+  arguments:
+  - 198
+  - clone-a
+  en: Finish cloud-init successfully in clone-a.
+  fr: Terminez cloud-init sans erreur dans clone-a.
+- id: pve-construire-template-17
+  test: test_le_service_identifie_le_clone
+  arguments:
+  - 198
+  - clone-a
+  en: Serve the exact manifest witness line for VMID 198 from 10.10.113.198:8080.
+  fr: Servez la ligne témoin exacte du manifeste pour le VMID 198 depuis 10.10.113.198:8080.
+- id: pve-construire-template-18
+  test: test_le_clone_porte_son_nom
+  arguments:
+  - 199
+  - clone-b
+  en: Name VM 199 clone-b.
+  fr: Nommez la VM 199 clone-b.
+- id: pve-construire-template-19
+  test: test_le_clone_a_son_adresse
+  arguments:
+  - 199
+  - clone-b
+  en: Assign 10.10.113.199/24 through cloud-init to clone-b.
+  fr: Attribuez 10.10.113.199/24 par cloud-init à clone-b.
+- id: pve-construire-template-20
+  test: test_la_cle_autorisee_est_propre_au_clone
+  arguments:
+  - 199
+  - clone-b
+  en: Configure only the supplied clone-b public key as the cloud-init key of VM 199.
+  fr: Configurez uniquement la clé publique fournie pour clone-b comme clé cloud-init de la VM 199.
+- id: pve-construire-template-21
+  test: test_le_clone_accepte_sa_cle
+  arguments:
+  - 199
+  - clone-b
+  en: Allow the assigned clone-b key to log in to VM 199 as debian.
+  fr: Permettez à la clé attribuée à clone-b de se connecter à la VM 199 comme debian.
+- id: pve-construire-template-22
+  test: test_le_clone_refuse_l_autre_cle
+  arguments:
+  - 199
+  - clone-b
+  en: Refuse the other clone key when authenticating to clone-b.
+  fr: Refusez la clé de l’autre clone lors de l’authentification sur clone-b.
+- id: pve-construire-template-23
+  test: test_le_nom_invite_est_personnalise
+  arguments:
+  - 199
+  - clone-b
+  en: Make the guest hostname of VM 199 equal clone-b.
+  fr: Donnez au système invité de la VM 199 le nom clone-b.
+- id: pve-construire-template-24
+  test: test_cloud_init_est_termine
+  arguments:
+  - 199
+  - clone-b
+  en: Finish cloud-init successfully in clone-b.
+  fr: Terminez cloud-init sans erreur dans clone-b.
+- id: pve-construire-template-25
+  test: test_le_service_identifie_le_clone
+  arguments:
+  - 199
+  - clone-b
+  en: Serve the exact manifest witness line for VMID 199 from 10.10.113.199:8080.
+  fr: Servez la ligne témoin exacte du manifeste pour le VMID 199 depuis 10.10.113.199:8080.
+- id: pve-construire-template-26
+  test: test_une_identite_est_distincte
+  arguments:
+  - mac
+  en: Give the two clones distinct MAC addresses.
+  fr: Donnez aux deux clones des adresses MAC distinctes.
+- id: pve-construire-template-27
+  test: test_une_identite_est_distincte
+  arguments:
+  - machine-id
+  en: Give the two clones distinct machine-id values.
+  fr: Donnez aux deux clones des valeurs machine-id distinctes.
+- id: pve-construire-template-28
+  test: test_une_identite_est_distincte
+  arguments:
+  - host-key
+  en: Give the two clones distinct SSH host keys.
+  fr: Donnez aux deux clones des clés hôte SSH distinctes.
+- id: pve-construire-template-29
+  test: test_un_nouveau_clone_rejoue_la_recette
+  arguments: []
+  en: Make the template recipe boot a fresh clone and start its witness service without manual guest changes.
+  fr: Faites démarrer un clone neuf et son service témoin depuis la recette du template, sans intervention manuelle
+    dans l’invité.
+- id: pve-construire-template-30
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 198
+  - memory
+  - '768'
+  en: Configure VM 198 with 768 MiB RAM.
+  fr: Configurez la VM 198 avec 768 Mio de mémoire.
+- id: pve-construire-template-31
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 198
+  - cores
+  - '1'
+  en: Configure VM 198 with one vCPU.
+  fr: Configurez la VM 198 avec un vCPU.
+- id: pve-construire-template-32
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 198
+  - ciuser
+  - debian
+  en: Configure VM 198 with cloud-init user debian.
+  fr: Configurez la VM 198 avec l’utilisateur cloud-init debian.
+- id: pve-construire-template-33
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 198
+  - nameserver
+  - 10.10.113.1
+  en: Configure VM 198 with DNS 10.10.113.1.
+  fr: Configurez la VM 198 avec le DNS 10.10.113.1.
+- id: pve-construire-template-34
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 198
+  - bridge
+  - vmbr0
+  en: Configure VM 198 with bridge vmbr0.
+  fr: Configurez la VM 198 avec le pont vmbr0.
+- id: pve-construire-template-35
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 198
+  - gw
+  - 10.10.113.1
+  en: Configure VM 198 with gateway 10.10.113.1.
+  fr: Configurez la VM 198 avec la passerelle 10.10.113.1.
+- id: pve-construire-template-36
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 199
+  - memory
+  - '768'
+  en: Configure VM 199 with 768 MiB RAM.
+  fr: Configurez la VM 199 avec 768 Mio de mémoire.
+- id: pve-construire-template-37
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 199
+  - cores
+  - '1'
+  en: Configure VM 199 with one vCPU.
+  fr: Configurez la VM 199 avec un vCPU.
+- id: pve-construire-template-38
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 199
+  - ciuser
+  - debian
+  en: Configure VM 199 with cloud-init user debian.
+  fr: Configurez la VM 199 avec l’utilisateur cloud-init debian.
+- id: pve-construire-template-39
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 199
+  - nameserver
+  - 10.10.113.1
+  en: Configure VM 199 with DNS 10.10.113.1.
+  fr: Configurez la VM 199 avec le DNS 10.10.113.1.
+- id: pve-construire-template-40
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 199
+  - bridge
+  - vmbr0
+  en: Configure VM 199 with bridge vmbr0.
+  fr: Configurez la VM 199 avec le pont vmbr0.
+- id: pve-construire-template-41
+  test: test_un_parametre_cloud_init_du_clone
+  arguments:
+  - 199
+  - gw
+  - 10.10.113.1
+  en: Configure VM 199 with gateway 10.10.113.1.
+  fr: Configurez la VM 199 avec la passerelle 10.10.113.1.

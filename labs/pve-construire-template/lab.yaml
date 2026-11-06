@@ -1,9 +1,10 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
 id: pve-construire-template
-title: Construire des templates et cloner avec cloud-init
+title: Build a cloud-init template and independent clones
 level: l1
-description: Produire un template versionné et deux clones distincts utilisables sans configuration
-  manuelle après démarrage.
+description: The preparation provides a Debian 13 cloud image with its published SHA-512, a vendor snippet that
+  installs the witness service, and two separate SSH client keys. It creates no template or clone. Use VM 197 for
+  the template and VMs 198 and 199 for the clones. Keep one vCPU and 768 MiB RAM per clone, gateway and DNS 10.10.113.1,
+  and bridge vmbr0. These bounds preserve room for the evaluator’s probe.
 skills:
 - proxmox
 - deployer

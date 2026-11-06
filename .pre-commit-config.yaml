@@ -182,6 +182,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: suite-deploiement-anti-triche
+        name: les nouveaux labs de déploiement apparient les consignes et refusent les triches
+        entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_suite_deploiement.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: liens-internes
         name: les liens relatifs des Markdown pointent un fichier existant
         entry: uv run --no-project --with pytest --with pyyaml pytest tests/test_liens_internes.py -q

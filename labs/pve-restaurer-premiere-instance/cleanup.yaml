@@ -1,38 +1,9 @@
 ---
-- name: Nettoyer uniquement les ressources marquées de pve-restaurer-premiere-instance
+- name: Clean pve-restaurer-premiere-instance
   hosts: lab_target
   become: true
   tasks:
-    - name: Examiner les VMID source et restauré
-      ansible.builtin.command:
-        argv: [qm, config, "{{ item }}"]
-      loop: [198, 199]
-      register: vm_configs
-      changed_when: false
-      failed_when: false
-
-    - name: Vérifier la propriété des VMID avant suppression
-      ansible.builtin.assert:
-        that:
-          - item.rc != 0 or 'dsoxlab-lab=pve-restaurer-premiere-instance' in item.stdout
-        fail_msg: "La VMID {{ item.item }} n'appartient plus au lab ; elle est conservée."
-      loop: "{{ vm_configs.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-
-    - name: Détruire uniquement les VM portant le marqueur de propriété du lab
-      ansible.builtin.command:
-        argv: [qm, destroy, "{{ item.item }}", --purge, "1", --destroy-unreferenced-disks, "1"]
-      loop: "{{ vm_configs.results }}"
-      when: item.rc == 0
-      changed_when: true
-
-    - name: Retirer le service cloud-init attribué
-      ansible.builtin.file:
-        path: /var/lib/vz/snippets/pve-restore-witness.yaml
-        state: absent
-
-    - name: Retirer les preuves et manifeste de ce lab
-      ansible.builtin.file:
-        path: /opt/lab-proxmox/pve-restaurer-premiere-instance
-        state: absent
+    - name: Clean only the resources assigned to this exercise
+      ansible.builtin.script: ../../shared/preparer-deploiement.py pve-restaurer-premiere-instance --clean
+      args:
+        executable: python3

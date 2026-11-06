@@ -1,0 +1,81 @@
+requirements:
+- id: pve-restaurer-premiere-instance-01
+  test: test_la_vm_restauree_n_a_pas_de_seconde_carte
+  arguments: []
+  en: Keep restored VM 199 without any additional network interface.
+  fr: Gardez la VM restaurée 199 sans interface réseau supplémentaire.
+- id: pve-restaurer-premiere-instance-02
+  test: test_le_marqueur_de_propriete
+  arguments: []
+  en: Keep restored VM 199 description equal to dsoxlab-lab=pve-restaurer-premiere-instance.
+  fr: Gardez la description dsoxlab-lab=pve-restaurer-premiere-instance sur la VM restaurée 199.
+- id: pve-restaurer-premiere-instance-03
+  test: test_l_archive_est_un_vma_complet_lisible
+  arguments: []
+  en: Keep exactly one readable, complete VMA/Zstandard backup of VM 198 in the assigned backup directory.
+  fr: Conservez une seule sauvegarde VMA/Zstandard complète et lisible de la VM 198 dans le répertoire attribué.
+- id: pve-restaurer-premiere-instance-04
+  test: test_l_archive_contient_le_disque_systeme
+  arguments: []
+  en: Include the complete 4 GiB scsi0 system disk in the backup archive.
+  fr: Incluez le disque système scsi0 complet de 4 Gio dans l’archive de sauvegarde.
+- id: pve-restaurer-premiere-instance-05
+  test: test_une_tache_de_restauration_a_reussi
+  arguments: []
+  en: Complete a successful PVE restore task to VMID 199 after lab preparation.
+  fr: Terminez une tâche PVE de restauration réussie vers le VMID 199 après la préparation du lab.
+- id: pve-restaurer-premiere-instance-06
+  test: test_le_disque_restaure_est_independant
+  arguments: []
+  en: Restore a distinct complete system disk with no shared backing file.
+  fr: Restaurez un disque système distinct et complet, sans fichier de base partagé.
+- id: pve-restaurer-premiere-instance-07
+  test: test_la_vm_restauree_tourne
+  arguments: []
+  en: Run restored VM 199.
+  fr: Faites fonctionner la VM restaurée 199.
+- id: pve-restaurer-premiere-instance-08
+  test: test_la_vm_restauree_est_sur_le_reseau_isole
+  arguments: []
+  en: Connect restored VM 199 only through net0 on isolated bridge vmbr9.
+  fr: Raccordez la VM restaurée 199 uniquement par net0 sur le pont isolé vmbr9.
+- id: pve-restaurer-premiere-instance-09
+  test: test_les_adresses_mac_sont_distinctes
+  arguments: []
+  en: Give the restored VM a different MAC address from the source.
+  fr: Donnez à la VM restaurée une adresse MAC différente de celle de la source.
+- id: pve-restaurer-premiere-instance-10
+  test: test_le_marqueur_anterieur_est_restaure
+  arguments: []
+  en: Restore the original manifest witness line in /srv/temoin/index.html.
+  fr: Restaurez la ligne témoin initiale du manifeste dans /srv/temoin/index.html.
+- id: pve-restaurer-premiere-instance-11
+  test: test_le_client_isole_lit_le_service_restaure
+  arguments: []
+  en: Serve the restored witness over HTTP port 8080 to the isolated client dsox-restore.
+  fr: Servez le témoin restauré en HTTP sur le port 8080 au client isolé dsox-restore.
+- id: pve-restaurer-premiere-instance-12
+  test: test_la_restauration_fonctionne_source_arretee
+  arguments: []
+  en: Keep the restored service working after its restart while the source VM is stopped.
+  fr: Gardez le service restauré fonctionnel après son redémarrage pendant que la VM source est arrêtée.
+- id: pve-restaurer-premiere-instance-13
+  test: test_la_configuration_source_est_preservee
+  arguments: []
+  en: Preserve the original PVE configuration of source VM 198.
+  fr: Préservez la configuration PVE initiale de la VM source 198.
+- id: pve-restaurer-premiere-instance-14
+  test: test_le_service_source_est_preserve
+  arguments: []
+  en: Preserve the original witness service of source VM 198.
+  fr: Préservez le service témoin initial de la VM source 198.
+- id: pve-restaurer-premiere-instance-15
+  test: test_le_pont_restauration_reste_sans_port_physique
+  arguments: []
+  en: Keep physical interfaces out of vmbr9.
+  fr: Gardez les interfaces physiques hors de vmbr9.
+- id: pve-restaurer-premiere-instance-16
+  test: test_le_client_ne_joint_pas_la_gestion
+  arguments: []
+  en: Keep isolated client dsox-restore unable to reach the node’s HTTPS management service on port 8006.
+  fr: Gardez le client isolé dsox-restore incapable de joindre le service HTTPS de gestion du nœud sur le port 8006.

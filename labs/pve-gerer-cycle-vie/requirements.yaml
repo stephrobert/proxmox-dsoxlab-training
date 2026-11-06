@@ -1,0 +1,97 @@
+requirements:
+- id: pve-gerer-cycle-vie-01
+  test: test_une_allocation_declaree
+  arguments:
+  - memory
+  - '2048'
+  en: Configure VM 195 with 2048 MiB RAM.
+  fr: Configurez la VM 195 avec 2048 Mio de mémoire.
+- id: pve-gerer-cycle-vie-02
+  test: test_une_allocation_declaree
+  arguments:
+  - cores
+  - '2'
+  en: Configure VM 195 with two vCPUs.
+  fr: Configurez la VM 195 avec deux vCPU.
+- id: pve-gerer-cycle-vie-03
+  test: test_une_allocation_declaree
+  arguments:
+  - onboot
+  - '1'
+  en: Configure VM 195 with automatic startup enabled.
+  fr: Configurez la VM 195 avec le démarrage automatique activé.
+- id: pve-gerer-cycle-vie-04
+  test: test_une_allocation_declaree
+  arguments:
+  - startup
+  - order=20
+  en: Configure VM 195 with startup order 20.
+  fr: Configurez la VM 195 avec l'ordre de démarrage 20.
+- id: pve-gerer-cycle-vie-05
+  test: test_une_allocation_effective
+  arguments:
+  - -m
+  - '2048'
+  en: Run VM 195 with 2048 MiB RAM actually allocated by QEMU.
+  fr: Faites fonctionner la VM 195 avec 2048 Mio de mémoire réellement alloués par QEMU.
+- id: pve-gerer-cycle-vie-06
+  test: test_une_allocation_effective
+  arguments:
+  - -smp
+  - '2'
+  en: Run VM 195 with two vCPUs actually allocated by QEMU.
+  fr: Faites fonctionner la VM 195 avec deux vCPU réellement alloués par QEMU.
+- id: pve-gerer-cycle-vie-07
+  test: test_le_disque_declare_fait_huit_gio
+  arguments: []
+  en: Set the PVE scsi0 disk size to 8 GiB.
+  fr: Portez la taille PVE du disque scsi0 à 8 Gio.
+- id: pve-gerer-cycle-vie-08
+  test: test_le_disque_invite_fait_huit_gio
+  arguments: []
+  en: Make the guest see an 8 GiB /dev/sda disk.
+  fr: Faites reconnaître un disque /dev/sda de 8 Gio par l'invité.
+- id: pve-gerer-cycle-vie-09
+  test: test_la_racine_utilise_la_nouvelle_capacite
+  arguments: []
+  en: Expand the guest root filesystem to at least 7 GiB.
+  fr: Étendez le système de fichiers racine invité à au moins 7 Gio.
+- id: pve-gerer-cycle-vie-10
+  test: test_la_racine_accepte_une_ecriture
+  arguments: []
+  en: Keep the guest root filesystem writable; the evaluator writes and removes an 8 MiB probe.
+  fr: Gardez la racine invitée inscriptible ; l'évaluateur écrit puis retire une sonde de 8 Mio.
+- id: pve-gerer-cycle-vie-11
+  test: test_le_snapshot_garde_une_allocation_initiale
+  arguments:
+  - memory
+  - '1024'
+  en: Create avant-changement while the VM still has 1024 MiB RAM.
+  fr: Créez avant-changement quand la VM possède encore 1024 Mio de mémoire.
+- id: pve-gerer-cycle-vie-12
+  test: test_le_snapshot_garde_une_allocation_initiale
+  arguments:
+  - cores
+  - '1'
+  en: Create avant-changement while the VM still has one vCPU.
+  fr: Créez avant-changement quand la VM possède encore un vCPU.
+- id: pve-gerer-cycle-vie-13
+  test: test_le_snapshot_garde_le_disque_initial
+  arguments: []
+  en: Include the original 4 GiB disk in avant-changement.
+  fr: Conservez le disque initial de 4 Gio dans avant-changement.
+- id: pve-gerer-cycle-vie-14
+  test: test_le_snapshot_restitue_les_donnees_initiales
+  arguments: []
+  en: Make avant-changement restore the initial nonce in /srv/temoin/retour.txt.
+  fr: Faites restituer le nonce initial dans /srv/temoin/retour.txt par avant-changement.
+- id: pve-gerer-cycle-vie-15
+  test: test_la_page_repond_depuis_la_vm
+  arguments: []
+  en: Keep VM 195 serving its exact manifest witness line on 10.10.113.195:8080.
+  fr: Gardez le service de la VM 195 disponible sur 10.10.113.195:8080 avec la ligne témoin exacte du manifeste.
+- id: pve-gerer-cycle-vie-16
+  test: test_le_service_survit_a_un_redemarrage
+  arguments: []
+  en: Keep the witness service available after a clean shutdown and start of VM 195.
+  fr: Gardez le service témoin disponible après un arrêt propre puis un démarrage de la VM 195.

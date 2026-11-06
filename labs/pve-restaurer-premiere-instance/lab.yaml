@@ -1,9 +1,10 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
 id: pve-restaurer-premiere-instance
-title: Sauvegarder et restaurer une première instance
+title: Back up and restore a first VM on an isolated network
 level: l1
-description: Sauvegarder une instance puis retrouver ses données et son service dans une restauration
-  isolée.
+description: 'Source VM 198 already serves a session-specific witness on 10.10.113.198:8080. The preparation supplies
+  isolated bridge vmbr9 and client namespace dsox-restore (10.10.113.240/24). Back up to /var/lib/vz/dump/pve-restaurer-premiere-instance
+  and restore to VM 199. Keep the restored guest IP unchanged: the source and restore use different Ethernet segments.
+  Do not connect the isolated bridge to the host network.'
 skills:
 - proxmox
 - deployer
@@ -24,4 +25,4 @@ runtime:
   default: pve
 validation:
   functional: true
-  persistence_after_reboot: false
+  persistence_after_reboot: true

@@ -1,33 +1,9 @@
 ---
-- name: Nettoyer les ressources explicitement marquées de pve-construire-template
+- name: Clean pve-construire-template
   hosts: lab_target
   become: true
   tasks:
-    - name: Lire les configurations des clones et du template
-      ansible.builtin.command:
-        argv: [qm, config, "{{ item }}"]
-      loop: [198, 199, 197]
-      register: vm_configs
-      changed_when: false
-      failed_when: false
-
-    - name: Vérifier la propriété de toutes les VM avant toute suppression
-      ansible.builtin.assert:
-        that:
-          - item.rc != 0 or 'dsoxlab-lab=pve-construire-template' in item.stdout
-        fail_msg: "La VMID {{ item.item }} n'appartient plus au lab ; le nettoyage est arrêté."
-      loop: "{{ vm_configs.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-
-    - name: Détruire uniquement les VM portant le marqueur de propriété du lab
-      ansible.builtin.command:
-        argv: [qm, destroy, "{{ item.item }}", --purge, "1", --destroy-unreferenced-disks, "1"]
-      loop: "{{ vm_configs.results }}"
-      when: item.rc == 0
-      changed_when: true
-
-    - name: Retirer les clés et preuves dédiées au lab
-      ansible.builtin.file:
-        path: /opt/lab-proxmox/pve-construire-template
-        state: absent
+    - name: Clean only the resources assigned to this exercise
+      ansible.builtin.script: ../../shared/preparer-deploiement.py pve-construire-template --clean
+      args:
+        executable: python3

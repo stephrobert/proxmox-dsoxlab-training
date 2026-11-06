@@ -1,9 +1,9 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/stephrobert/dsoxlab/main/schemas/lab.schema.json
 id: pve-gerer-cycle-vie
-title: Gérer ressources, disques et retours locaux
+title: Resize a VM and prove a local rollback
 level: l1
-description: Agrandir une VM, préparer un retour local et vérifier la persistance des changements
-  utiles.
+description: The application VM is running with 1 vCPU, 1024 MiB RAM and a 4 GiB system disk. Preserve a local return
+  point before allocating 2 vCPUs, 2048 MiB RAM and an 8 GiB disk. Extend the partition and filesystem inside Debian
+  as well. The original witness, guest agent and static network are supplied.
 skills:
 - proxmox
 - deployer
@@ -24,4 +24,4 @@ runtime:
   default: pve
 validation:
   functional: true
-  persistence_after_reboot: false
+  persistence_after_reboot: true

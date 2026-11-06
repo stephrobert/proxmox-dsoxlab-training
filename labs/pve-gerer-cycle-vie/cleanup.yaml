@@ -1,33 +1,9 @@
 ---
-- name: Nettoyer les preuves temporaires de pve-gerer-cycle-vie
+- name: Clean pve-gerer-cycle-vie
   hosts: lab_target
   become: true
   tasks:
-    - name: Lire la configuration de la VM attribuée
-      ansible.builtin.command:
-        argv: [qm, config, "195"]
-      register: vm_config
-      changed_when: false
-      failed_when: false
-
-    - name: Vérifier la propriété avant de nettoyer la VM
-      ansible.builtin.assert:
-        that:
-          - vm_config.rc != 0 or 'dsoxlab-lab=pve-gerer-cycle-vie' in vm_config.stdout
-        fail_msg: La VMID 195 n'appartient plus au lab ; elle est conservée.
-
-    - name: Détruire uniquement la VM marquée par ce lab
-      ansible.builtin.command:
-        argv: [qm, destroy, "195", --purge, "1", --destroy-unreferenced-disks, "1"]
-      when: vm_config.rc == 0
-      changed_when: true
-
-    - name: Retirer l'extrait cloud-init de ce lab
-      ansible.builtin.file:
-        path: /var/lib/vz/snippets/pve-gerer-cycle-vie.yaml
-        state: absent
-
-    - name: Retirer le répertoire propre à ce lab
-      ansible.builtin.file:
-        path: /opt/lab-proxmox/pve-gerer-cycle-vie
-        state: absent
+    - name: Clean only the resources assigned to this exercise
+      ansible.builtin.script: ../../shared/preparer-deploiement.py pve-gerer-cycle-vie --clean
+      args:
+        executable: python3

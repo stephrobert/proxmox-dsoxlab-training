@@ -1,15 +1,11 @@
-# pve-restaurer-premiere-instance
+# Back up and restore a first VM on an isolated network
 
-Sauvegarder une instance puis retrouver ses données et son service dans une restauration isolée.
+Source VM 198 already serves a session-specific witness on 10.10.113.198:8080. The preparation supplies isolated bridge vmbr9 and client namespace dsox-restore (10.10.113.240/24). Back up to /var/lib/vz/dump/pve-restaurer-premiere-instance and restore to VM 199. Keep the restored guest IP unchanged: the source and restore use different Ethernet segments. Do not connect the isolated bridge to the host network.
 
-Read [`scenario.md`](./scenario.md) before starting.
+Read [scenario.md](./scenario.md) before starting.
 
 ```bash
 dsoxlab run pve-restaurer-premiere-instance
 dsoxlab challenge pve-restaurer-premiere-instance
 dsoxlab check pve-restaurer-premiere-instance
 ```
-
-Only use resources named in this lab's manifest. Cluster nodes are never provisioned implicitly. Automated success alone does not attest criteria requiring human observation.
-
-Setup reserves VMIDs 198 and 199 and prepares the source witness VM and verified Debian image. It requires an instructor-provided isolated restore bridge through `pve_restore_bridge`; it does not create external networks.

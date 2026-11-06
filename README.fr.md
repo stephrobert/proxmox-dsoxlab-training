@@ -213,20 +213,117 @@ pas qu'il est attesté. Il n'est prouvé qu'après échec des tests avant le ges
 et réussite après celui-ci sur l'environnement cible.
 
 <!-- LABS:START -->
-### Déployer un nœud et ses premières instances
+### Concevoir et qualifier le premier nœud
 
-Installer Proxmox VE, depuis l'ISO ou sur une Debian 13, et le vérifier face à un cahier des charges ; créer une VM KVM et un conteneur LXC non privilégié, construire un modèle, restaurer une première instance.
+Préparer un laboratoire isolé et raccorder un invité au réseau attribué.
 
 | Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
 |---|---|---|---|---|
-| `verifier-son-installation` | Vérifier votre installation de Proxmox face au cahier des charges | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation-debian/) |
+| `pve-preparer-laboratoire` | Préparer un laboratoire et son plan de ressources | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
 | `pve-raccorder-instance` | Raccorder une VM au réseau et corriger la panne au bon étage | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/reseau/) |
+
+### Déployer un nœud et ses premières instances
+
+Installer Proxmox VE, depuis l'ISO ou sur Debian 13, puis vérifier sa conformité ; créer une VM KVM et un conteneur LXC non privilégié, construire un modèle et restaurer un premier service.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-installer-noeud` | Installer Proxmox et établir un accès fiable | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation/) |
+| `verifier-son-installation` | Vérifier votre installation de Proxmox face au cahier des charges | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation-debian/) |
 | `pve-suivre-tache` | Lire les tâches de Proxmox : rattacher chaque résultat à sa tâche | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/interface-ui/) |
 | `pve-creer-vm` | Créer une VM KVM et vérifier que son service répond | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/creer-vm-kvm/) |
 | `pve-creer-lxc` | Créer un conteneur LXC non privilégié aux ressources bornées | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/conteneurs-lxc/) |
 | `pve-reparer-agent` | Rétablir l'agent invité QEMU sans forcer l'arrêt de la VM | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/qemu-guest-agent/) |
+| `pve-gerer-cycle-vie` | Redimensionner une VM et prouver un retour local | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-construire-template` | Construire un template cloud-init et des clones indépendants | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-restaurer-premiere-instance` | Sauvegarder et restaurer une première VM sur un réseau isolé | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-epreuve-deploiement` | Livrer et restaurer un premier service virtualisé | l1 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
 
-_6 labs, table générée par `scripts/gen_catalog.py`._
+### Sécuriser les identités et les frontières
+
+Déléguer les droits, sécuriser les identités et filtrer les flux de gestion et des invités.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-deleguer-acces` | Déléguer les droits sans élargir le périmètre | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-securiser-identites` | Sécuriser les identités, jetons et connexions | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-filtrer-flux` | Filtrer le management et les invités | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-maitriser-volumes-lxc` | Gérer les volumes et identités des LXC | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+
+### Exploiter les réseaux des invités
+
+Segmenter les VLAN, router les flux et modifier le réseau de façon réversible.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-segmenter-vlan` | Segmenter et diagnostiquer les VLAN | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-changer-reseau` | Router, traduire et modifier le réseau sans se couper | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+
+### Sauvegarder et restaurer avec PBS
+
+Intégrer PBS, protéger les clés de sauvegarde et prouver la reprise du service.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-integrer-pbs` | Déployer PBS et réaliser une sauvegarde vérifiable | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-proteger-sauvegardes` | Chiffrer, conserver et vérifier les sauvegardes | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-prouver-restauration` | Restaurer un service et mesurer RPO et RTO | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+
+### Observer, diagnostiquer et maintenir
+
+Observer la capacité, diagnostiquer un invité indisponible et maintenir un nœud.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-observer-alerter` | Observer la capacité et recevoir les alertes | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-diagnostiquer-instance` | Diagnostiquer une VM indisponible | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-maintenir-noeud` | Maintenir un nœud et préparer une montée de version | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-exploiter-thin-pool` | Exploiter Directory et LVM-thin sans saturation | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-restaurer-redondance-zfs` | Exploiter un miroir ZFS et récupérer un disque | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+| `pve-epreuve-exploitation` | Sécuriser, diagnostiquer et restaurer une plateforme | l2 | vm | [guide](https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/) |
+
+### Exploiter un cluster et sa disponibilité
+
+Construire un cluster de trois nœuds, migrer et répliquer les invités, éprouver la haute disponibilité face à une panne imposée de l'extérieur, et reprendre après la perte du site primaire.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-eprouver-cluster` | Construire et éprouver le cluster | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-pvecm.html) |
+| `pve-qualifier-stockage-partage` | Qualifier le stockage partagé et ses limites | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-pvesm.html) |
+| `pve-migrer-instance` | Migrer une VM et un CT en mesurant l’impact client | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-qm.html) |
+| `pve-reserver-capacite` | Réserver la capacité N-1 et imposer le placement | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/) |
+| `pve-mesurer-replication` | Mesurer la réplication ZFS et la frontière récupérable | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-pvesr.html) |
+| `pve-eprouver-ha` | Éprouver la reprise du service sans double écrivain | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-ha-manager.html) |
+| `pve-maintenir-cluster` | Maintenir un nœud en préservant le contrat de service | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/) |
+| `pve-reprendre-hors-site` | Reprendre depuis un PBS secondaire sans dépendance primaire | l3 | vm | - |
+| `pve-epreuve-disponibilite` | Épreuve de disponibilité et reprise indépendante | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-ha-manager.html) |
+
+### Automatiser une plateforme reproductible
+
+Piloter l'API et attendre les résultats réels, provisionner avec Terraform sous des droits mesurés, construire un inventaire Ansible fiable, et livrer une plateforme qu'un contrôleur vierge sait reconstruire.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-piloter-api` | Piloter l’API et attendre les résultats réels | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/api-viewer/) |
+| `pve-provisionner-terraform` | Provisionner avec Terraform et des droits mesurés | l3 | vm | [guide](https://registry.terraform.io/providers/bpg/proxmox/latest/docs) |
+| `pve-reconcilier-etat` | Maîtriser état, dérive et changements destructeurs | l3 | vm | [guide](https://registry.terraform.io/providers/bpg/proxmox/latest/docs) |
+| `pve-fiabiliser-inventaire` | Construire un inventaire Ansible fiable | l3 | vm | [guide](https://docs.ansible.com/ansible/latest/inventory_guide/intro_dynamic_inventory.html) |
+| `pve-operer-ansible` | Automatiser les opérations avec Ansible | l3 | vm | [guide](https://docs.ansible.com/ansible/latest/collections/community/proxmox/proxmox_module.html) |
+| `pve-livrer-plateforme` | Livrer une recette reproductible et transférable | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/) |
+| `pve-epreuve-automatisation` | Livrer une plateforme reproductible par API et IaC | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/) |
+
+### Options
+
+Windows avec VirtIO, migration VMware, Ceph et SDN. Chaque option est indépendante, et aucune ne bloque un niveau.
+
+| Lab (id) | Titre | Niveau | Runtime | Guide compagnon |
+|---|---|---|---|---|
+| `pve-integrer-windows` | Exploiter une VM Windows avec VirtIO | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/) |
+| `pve-migrer-vmware` | Migrer une charge VMware avec une recette de bascule | l3 | vm | [guide](https://pve.proxmox.com/wiki/Migrate_to_Proxmox_VE) |
+| `pve-eprouver-ceph` | Déployer et dépanner un stockage Ceph | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-pveceph.html) |
+| `pve-deployer-sdn` | Construire un réseau SDN adapté à la charge | l3 | vm | [guide](https://pve.proxmox.com/pve-docs/chapter-pvesdn.html) |
+
+_47 labs, table générée par `scripts/gen_catalog.py`._
 <!-- LABS:END -->
 
 ## Contribuer
