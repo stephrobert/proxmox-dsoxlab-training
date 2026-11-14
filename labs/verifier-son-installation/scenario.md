@@ -64,7 +64,7 @@ So check your `/etc/hosts` **before** installing the packages.
 
 The guide describes the path, under "Quelle méthode d'installation choisir dans
 une VM":
-<https://www.stephane-robert.info/docs/virtualiser/type1/proxmox/fondamentaux/installation/>
+<https://www.stephane-robert.info/en/docs/proxmox/install-from-iso/>
 
 Proxmox's own procedure for the Debian path is on their wiki:
 <https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_13_Trixie>
