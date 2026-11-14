@@ -48,3 +48,17 @@ labs, ce qui casse la progression déjà enregistrée des apprenants.
   forme des frères ; ils portaient encore les textes du squelette et le nom
   provisoire `proxmox`.
 - Les actions GitHub sont épinglées sur les mêmes versions que les frères.
+- **Le README ne recopie plus la documentation du moteur, il y renvoie**
+  (issue dsoxlab #201). Les sous-sections « contrat déclaratif » et « cycle de
+  vie d'un lab » décrivaient `dsoxlab` lui-même, et une telle copie dérive à
+  chaque version du moteur. Elles laissent la place à des liens vers le
+  contrat, les commandes et le guide de l'auteur de dsoxlab. Ce qui est propre
+  au catalogue reste.
+
+### Corrigé
+
+- **`CONTRIBUTING` conseillait de jouer `list-labs` avant
+  `validate-structure`.** C'est faux depuis dsoxlab 0.1.97 :
+  `validate-structure` signale seul un `lab.yaml` que le moteur ne sait pas
+  charger et un lab listé dans le `meta.yml` mais absent du disque, et il
+  échoue sur eux.
